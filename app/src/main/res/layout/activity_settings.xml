@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/settings"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".SettingsActivity">
+
+    <!-- Головешка -->
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true">
+
+            <!-- Кнопка -->
+
+            <ImageButton
+                android:id="@+id/icon_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:contentDescription="@string/icon_description"
+                android:src="@drawable/but" />
+
+            <!-- Имя страницы -->
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:paddingStart="64dp"
+                android:paddingEnd="64dp"
+                android:textSize="@dimen/text_size"
+                android:textColor="@color/black"
+                android:text="@string/settings"
+                />
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+    <!-- Темная тема -->
+
+    <RelativeLayout
+        android:id="@+id/line_dark_theme"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginTop="80dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ExtraText">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textSize="@dimen/settings_text_size"
+            android:textColor="@color/black"
+            android:text="@string/dark_theme" />
+
+        <!-- Тумблер -->
+
+
+        <Switch
+            android:id="@+id/standardSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="128dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="365dp"
+            android:layout_marginTop="5dp" />
+
+    </RelativeLayout>
+
+    <!-- Поделиться приложение -->
+
+    <RelativeLayout
+        android:id="@+id/line_share_app"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="141dp"
+        app:layout_constraintBottom_toTopOf="@+id/line_support"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textSize="@dimen/settings_text_size"
+            android:textColor="@color/black"
+            android:text="@string/share_app" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="370dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@null"
+            android:src="@drawable/share" />
+    </RelativeLayout>
+
+    <!-- Поддержка -->
+
+    <RelativeLayout
+        android:id="@+id/line_support"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginTop="202dp"
+        app:layout_constraintBottom_toTopOf="@+id/line_arrow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textSize="@dimen/settings_text_size"
+            android:textColor="@color/black"
+            android:text="@string/wr_support" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="370dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@null"
+            android:src="@drawable/support" />
+
+    </RelativeLayout>
+
+    <!-- То, что никто и никогда не читает -->
+
+    <RelativeLayout
+        android:id="@+id/line_arrow"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginTop="263dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textSize="@dimen/settings_text_size"
+            android:textColor="@color/black"
+            android:text="@string/user_agreement" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="370dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@null"
+            android:src="@drawable/arrow" />
+
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

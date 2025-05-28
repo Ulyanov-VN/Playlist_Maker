@@ -8,34 +8,30 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+
     <!-- Название -->
+
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <RelativeLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="22dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginStart="4dp"
+            android:letterSpacing="@dimen/letter_spacing"
+            android:text="@string/app_name"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_size"
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:letterSpacing="@dimen/letter_spacing"
-                android:text="@string/app_name"
-                android:textColor="@color/white"
-                android:textSize="@dimen/text_size"
-
-                />
-        </RelativeLayout>
+            />
     </RelativeLayout>
+
 
 
 
@@ -53,59 +49,58 @@
         <!-- Кнопка поиска -->
         <Button
             android:id="@+id/btnSearch"
+            android:text="@string/search"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginBottom="8dp"
             android:layout_weight="1"
-            android:backgroundTint="@color/white"
-            android:letterSpacing="@dimen/letter_spacing"
-            android:text="@string/search"
-            android:textAllCaps="false"
             android:textColor="@color/black"
             android:textSize="@dimen/text_size"
+            android:letterSpacing="@dimen/letter_spacing"
+            android:backgroundTint="@color/white"
+            android:textAllCaps="false"
             app:cornerRadius="16dp"
-            app:iconGravity="textStart"
             app:icon="@drawable/search"
             app:iconTint="@color/black"
-            />
+            app:iconGravity="textStart" />
 
         <!-- Кнопка медиотека -->
         <Button
-                android:id="@+id/btnMedia"
-                android:text="@string/media"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginBottom="8dp"
-                android:layout_weight="1"
-                android:textColor="@color/black"
-                android:textSize="@dimen/text_size"
-                android:letterSpacing="@dimen/letter_spacing"
-                android:backgroundTint="@color/white"
-                android:textAllCaps="false"
-                app:cornerRadius="16dp"
-                app:icon="@drawable/media"
-                app:iconTint="@color/black"
-                app:iconGravity="textStart"/>
+            android:id="@+id/btnMedia"
+            android:text="@string/media"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="8dp"
+            android:layout_weight="1"
+            android:textColor="@color/black"
+            android:textSize="@dimen/text_size"
+            android:letterSpacing="@dimen/letter_spacing"
+            android:backgroundTint="@color/white"
+            android:textAllCaps="false"
+            app:cornerRadius="16dp"
+            app:icon="@drawable/media"
+            app:iconTint="@color/black"
+            app:iconGravity="textStart"/>
 
-            <!-- Кнопка настройки -->
-            <Button
-                android:id="@+id/btnSettings"
-                android:text="@string/settings"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginBottom="8dp"
-                android:layout_weight="1"
-                android:textColor="@color/black"
-                android:textSize="@dimen/text_size"
-                android:letterSpacing="@dimen/letter_spacing"
-                android:backgroundTint="@color/white"
-                android:textAllCaps="false"
-                app:cornerRadius="16dp"
-                app:icon="@drawable/setting"
-                app:iconTint="@color/black"
-                app:iconGravity="textStart"/>
+        <!-- Кнопка настройки -->
+        <Button
+            android:id="@+id/btnSettings"
+            android:text="@string/settings"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="8dp"
+            android:layout_weight="1"
+            android:textColor="@color/black"
+            android:textSize="@dimen/text_size"
+            android:letterSpacing="@dimen/letter_spacing"
+            android:backgroundTint="@color/white"
+            android:textAllCaps="false"
+            app:cornerRadius="16dp"
+            app:icon="@drawable/setting"
+            app:iconTint="@color/black"
+            app:iconGravity="textStart"/>
 
-        </LinearLayout>
+    </LinearLayout>
 
 
 

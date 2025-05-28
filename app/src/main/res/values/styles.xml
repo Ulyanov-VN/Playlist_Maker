@@ -1,2 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <style name="CustomTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="textAllCaps">false</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">@dimen/text_size</item>
+    </style>
+
+    <style name="CustomSearchView" parent="Widget.AppCompat.SearchView">
+        <item name="android:background">@android:color/transparent</item> <!-- Прозрачный фон -->
+        <item name="android:icon">@android:color/transparent</item> <!-- Прозрачная иконка -->
+        <item name="android:queryBackground">@android:color/transparent</item> <!-- Прозрачный фон для запроса -->
+        <item name="android:searchHintIcon">@android:color/transparent</item> <!-- Прозрачная иконка подсказки -->
+    </style>
+</resources>

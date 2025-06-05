@@ -1,108 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
-    android:background="@color/blue"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/colorPrimary"
     tools:context=".MainActivity">
-
 
     <!-- Название -->
 
-
     <RelativeLayout
+
+        android:id="@+id/relativeLayout2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:fitsSystemWindows="true"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="16dp"
+            android:fontFamily="@font/ys_display_medium"
             android:letterSpacing="@dimen/letter_spacing"
             android:text="@string/app_name"
             android:textColor="@color/white"
+            android:textFontWeight="500"
             android:textSize="@dimen/text_size"
 
             />
     </RelativeLayout>
 
-
-
-
     <LinearLayout
+
         android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="80dp"
         android:orientation="vertical"
-        android:layout_marginTop="64dp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="0dp" >
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/relativeLayout2">
 
         <!-- Кнопка поиска -->
         <Button
             android:id="@+id/btnSearch"
+            style="@style/ButtonMain"
             android:text="@string/search"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginBottom="8dp"
-            android:layout_weight="1"
-            android:textColor="@color/black"
-            android:textSize="@dimen/text_size"
-            android:letterSpacing="@dimen/letter_spacing"
-            android:backgroundTint="@color/white"
-            android:textAllCaps="false"
-            app:cornerRadius="16dp"
-            app:icon="@drawable/search"
-            app:iconTint="@color/black"
-            app:iconGravity="textStart" />
+            app:icon="@drawable/search" />
 
         <!-- Кнопка медиотека -->
         <Button
             android:id="@+id/btnMedia"
+            style="@style/ButtonMain"
             android:text="@string/media"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginBottom="8dp"
-            android:layout_weight="1"
-            android:textColor="@color/black"
-            android:textSize="@dimen/text_size"
-            android:letterSpacing="@dimen/letter_spacing"
-            android:backgroundTint="@color/white"
-            android:textAllCaps="false"
-            app:cornerRadius="16dp"
-            app:icon="@drawable/media"
-            app:iconTint="@color/black"
-            app:iconGravity="textStart"/>
+            app:icon="@drawable/media" />
+
 
         <!-- Кнопка настройки -->
         <Button
             android:id="@+id/btnSettings"
+            style="@style/ButtonMain"
             android:text="@string/settings"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginBottom="8dp"
-            android:layout_weight="1"
-            android:textColor="@color/black"
-            android:textSize="@dimen/text_size"
-            android:letterSpacing="@dimen/letter_spacing"
-            android:backgroundTint="@color/white"
-            android:textAllCaps="false"
-            app:cornerRadius="16dp"
-            app:icon="@drawable/setting"
-            app:iconTint="@color/black"
-            app:iconGravity="textStart"/>
+            app:icon="@drawable/setting" />
 
     </LinearLayout>
-
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

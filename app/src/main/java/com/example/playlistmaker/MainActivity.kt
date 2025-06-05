@@ -21,13 +21,10 @@ class MainActivity : AppCompatActivity() {
 
 
         val button = findViewById<Button>(R.id.btnSearch)
-
-        val buttonClickListener: View.OnClickListener = object : View.OnClickListener {
-            override fun onClick(v: View?) {
-                Toast.makeText(this@MainActivity, "Тест", Toast.LENGTH_SHORT).show()
-            }
+        button.setOnClickListener {
+            val displayIntent = Intent (this, SearchActivity::class.java)
+            startActivity(displayIntent)
         }
-        button.setOnClickListener(buttonClickListener)
 
         val button2 = findViewById<Button>(R.id.btnMedia)
 
@@ -41,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         button3.setOnClickListener {
             val displayIntent = Intent(this, SettingsActivity::class.java)
             startActivity(displayIntent)
+
         }
 
 

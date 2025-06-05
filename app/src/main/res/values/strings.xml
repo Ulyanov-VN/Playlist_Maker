@@ -10,4 +10,9 @@
     <string name="wr_support">Написать в поддержку</string>
     <string name="user_agreement">Пользовательское соглашение</string>
     <string name="icon_description">Назад</string>
+    <string name="favorite_tracks">Избранные треки</string>
+    <string name="Playlists">Плейлисты</string>
+    <string name="text_favorite_tracks">Ваша медиатека пуста</string>
+    <string name="text_playlist">Вы не создали ни одного плейлиста</string>
+    <string name="new_playlist">Новый плейлист</string>
 </resources>

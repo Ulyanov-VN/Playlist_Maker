@@ -4,11 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.tabs.TabLayout
 
 class MediaActivity : BaseActivity() {
@@ -30,6 +26,19 @@ class MediaActivity : BaseActivity() {
         val playlistsImage = playlistsTab.findViewById<ImageView>(R.id.iconSmile2)
         val playlistsText = playlistsTab.findViewById<TextView>(R.id.playlistsEmptyText)
 
+        // Определяем текущую тему
+        val isNightTheme =
+            when (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) {
+                android.content.res.Configuration.UI_MODE_NIGHT_YES -> true
+                else -> false
+            }
+        // Установка изображений в зависимости от темы
+        val smileIcon = if (isNightTheme) R.drawable.smile_night else R.drawable.smile
+
+        tracksImage.setImageResource(smileIcon)
+        playlistsImage.setImageResource(smileIcon)
+
+
         // Установка изображений и текстов
         tracksImage.setImageResource(R.drawable.smile)
         tracksText.text = getString(R.string.text_favorite_tracks)
@@ -45,6 +54,7 @@ class MediaActivity : BaseActivity() {
                         tracksTab.visibility = View.VISIBLE
                         playlistsTab.visibility = View.GONE
                     }
+
                     1 -> {
                         tracksTab.visibility = View.GONE
                         playlistsTab.visibility = View.VISIBLE
@@ -55,5 +65,28 @@ class MediaActivity : BaseActivity() {
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
             override fun onTabReselected(tab: TabLayout.Tab?) {}
         })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateThemeDependentResources()
+    }
+
+    private fun updateThemeDependentResources() {
+        val isNightTheme =
+            when (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) {
+                android.content.res.Configuration.UI_MODE_NIGHT_YES -> true
+                else -> false
+            }
+
+        val tracksTab = findViewById<ConstraintLayout>(R.id.tracksTab)
+        val playlistsTab = findViewById<ConstraintLayout>(R.id.playlistsTab)
+
+        val tracksImage = tracksTab.findViewById<ImageView>(R.id.iconSmile)
+        val playlistsImage = playlistsTab.findViewById<ImageView>(R.id.iconSmile2)
+
+        val smileIcon = if (isNightTheme) R.drawable.smile_night else R.drawable.smile
+        tracksImage.setImageResource(smileIcon)
+        playlistsImage.setImageResource(smileIcon)
     }
 }

@@ -1,11 +1,8 @@
 package com.example.playlistmaker
 
-import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import android.content.Intent
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 abstract class BaseActivity : AppCompatActivity() {
@@ -38,6 +35,7 @@ abstract class BaseActivity : AppCompatActivity() {
                     }
                     true
                 }
+
                 R.id.nav_media -> {
                     if (this !is MediaActivity) {
                         startActivity(Intent(this, MediaActivity::class.java))
@@ -45,6 +43,7 @@ abstract class BaseActivity : AppCompatActivity() {
                     }
                     true
                 }
+
                 R.id.nav_settings -> {
                     if (this !is SettingsActivity) {
                         startActivity(Intent(this, SettingsActivity::class.java))
@@ -52,6 +51,7 @@ abstract class BaseActivity : AppCompatActivity() {
                     }
                     true
                 }
+
                 else -> false
             }
         }

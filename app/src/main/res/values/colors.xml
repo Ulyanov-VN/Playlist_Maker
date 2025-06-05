@@ -4,4 +4,15 @@
     <color name="white">#FFFFFF</color>
     <color name="blue">#3772E7</color>
     <color name="grey">#E6E8EB</color>
+    <color name="icon_tint">#a0a0a0</color>
+    <color name="search_icon_tint">#FF000000</color>
+
+    <!-- Цвет фона ползунка (track) -->
+    <color name="switch_track">#808080</color>
+
+    <!-- Цвет переключателя (thumb) -->
+    <color name="switch_thumb">#FFFFFF</color>
+
+    <color name="cursor_color">#3772E7</color>
+
 </resources>

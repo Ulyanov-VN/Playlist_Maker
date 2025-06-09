@@ -56,11 +56,11 @@ class SearchActivity : BaseActivity() {
         clearButton = findViewById(R.id.clearButton)
 
 
-        setupKeyboardListener()
+       /* setupKeyboardListener()*/
         setupSearchField()
     }
 
-    private fun setupKeyboardListener() {
+/*    private fun setupKeyboardListener() {
         ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { _, insets ->
             val isKeyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             if (isKeyboardVisible) {
@@ -70,7 +70,7 @@ class SearchActivity : BaseActivity() {
             }
             insets
         }
-    }
+    }*/
 
     /*    private fun setupKeyboardListener() {
             val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)

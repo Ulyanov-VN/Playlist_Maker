@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingLeft="13dp"
+    android:paddingTop="16dp">
+
+
+    <ImageView
+        android:id="@+id/artwork"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:scaleType="centerCrop"
+        android:layout_gravity="center"
+         />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_gravity="center_vertical"
+        android:paddingStart="16dp"
+
+        >
+
+        <TextView
+            android:id="@+id/trackName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/colorControlNormal"
+            android:letterSpacing="0"
+            android:textSize="@dimen/text_size_AlbumName"
+            android:textFontWeight="400"
+            android:fontFamily="@font/ys_text_regular"
+
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="-2dp"
+                        >
+
+            <TextView
+                android:id="@+id/artistName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorAccent"
+                android:textSize="@dimen/text_size_AlbumGroupTime"
+                android:maxLines="1"
+                android:textFontWeight="400"
+                android:fontFamily="@font/ys_text_regular"
+                android:ellipsize="end" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="6dp"
+                android:src="@drawable/ellipse_1"
+                app:tint="?attr/colorAccent"
+                android:layout_gravity="center_vertical"/>
+
+            <TextView
+                android:id="@+id/trackTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorAccent"
+                android:textSize="@dimen/text_size_AlbumGroupTime"
+                android:textFontWeight="400"
+                android:fontFamily="@font/ys_text_regular"
+                 /> <!-- Добавляем отступ между artistName и trackTime -->
+        </LinearLayout>
+    </LinearLayout>
+
+    <ImageView
+        style="@style/ImageViewSettings"
+        android:layout_marginEnd="13dp"
+        android:layout_gravity="center_vertical"
+        android:contentDescription="@null"
+        android:src="@drawable/arrow" />
+
+</LinearLayout>

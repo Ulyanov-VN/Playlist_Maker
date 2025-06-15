@@ -6,4 +6,6 @@
     <dimen name="text_tabLayout">14sp</dimen>
     <dimen name="text_size_search">16sp</dimen>
     <dimen name="icon_size">24dp</dimen>
+    <dimen name="text_size_AlbumName">16sp</dimen>
+    <dimen name="text_size_AlbumGroupTime">11sp</dimen>
 </resources>

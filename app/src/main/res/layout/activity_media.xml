@@ -2,48 +2,48 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".MediaActivity"
-    android:background="@color/white"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?attr/colorSecondary"
+    tools:context=".MediaActivity">
 
     <RelativeLayout
         android:id="@+id/relativeLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:fitsSystemWindows="true"
+        app:layout_constraintBottom_toTopOf="@+id/tabLayout"
+        app:layout_constraintStart_toStartOf="parent">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
             android:layout_marginStart="12dp"
             android:text="@string/media"
-            android:textColor="@color/black"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="@dimen/text_size" />
     </RelativeLayout>
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
+        style="@style/MyTabLayout"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:layout_marginTop="42dp"
-        android:background="@color/white"
+        android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/relativeLayout"
+        app:tabTextAppearance="@style/MyTabTextAppearance">
+
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/favorite_tracks"/>
+            android:text="@string/favorite_tracks" />
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/Playlists"/>
+            android:text="@string/Playlists" />
 
     </com.google.android.material.tabs.TabLayout>
 
@@ -52,29 +52,29 @@
         android:id="@+id/tracksTab"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/tabLayout"
         app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/tabLayout">
 
         <ImageView
-           android:id="@+id/iconSmile"
+            android:id="@+id/iconSmile"
+            style="@style/ImageViewSmile"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/smile"
+
             app:layout_constraintBottom_toTopOf="@id/tracksEmptyText"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_chainStyle="packed"/>
+            app:layout_constraintVertical_chainStyle="packed" />
 
         <TextView
             android:id="@+id/tracksEmptyText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/text_favorite_tracks"
-            android:textColor="@color/black"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -89,6 +89,14 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <FrameLayout
+            android:id="@+id/mainContent"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="7dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -97,52 +105,53 @@
         android:id="@+id/playlistsTab"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:visibility="gone"
         android:paddingTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/tabLayout"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/tabLayout">
 
         <Button
             android:id="@+id/createPlaylistButton"
+            style="@style/ButtonNewPlaylist"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/new_playlist"
-            android:backgroundTint="@color/black"
-            android:textColor="@color/white"
-            android:layout_marginTop="0dp"
+
+
             app:layout_constraintBottom_toTopOf="@id/iconSmile2"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintVertical_chainStyle="packed"/>
-
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
+        <!--app:strokeColor="?attr/colorOnSurface"
+                    app:backgroundTint="@android:color/transparent"-->
 
 
         <ImageView
             android:id="@+id/iconSmile2"
+            style="@style/ImageViewSmile"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/smile"
+
             app:layout_constraintBottom_toTopOf="@id/playlistsEmptyText"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/createPlaylistButton"
-            app:layout_constraintVertical_chainStyle="packed"/>
+            app:layout_constraintVertical_chainStyle="packed" />
 
         <TextView
             android:id="@+id/playlistsEmptyText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/text_playlist"
-            android:textColor="@color/black"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/iconSmile2"
-            />
+            app:layout_constraintTop_toBottomOf="@id/iconSmile2" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/playlistsRecyclerView"
@@ -153,31 +162,22 @@
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <FrameLayout
-        android:id="@+id/mainContent"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/bottomNav"/>
-
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/grey"
-        app:layout_constraintBottom_toTopOf="@id/bottomNav"/>
+        app:layout_constraintBottom_toTopOf="@id/bottomNav" />
 
-        <com.google.android.material.bottomnavigation.BottomNavigationView
+    <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@color/white"
+        style="@style/BottomNavigation"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:menu="@menu/bottom_nav_menu"/>
-
+        app:layout_constraintStart_toStartOf="parent"
+        app:menu="@menu/bottom_nav_menu" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+

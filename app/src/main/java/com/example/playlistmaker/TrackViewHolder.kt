@@ -7,6 +7,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatDelegate
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.databinding.ItemTrackBinding
 
@@ -24,11 +26,18 @@ class TrackViewHolder(
             trackName.text = track.trackName
             artistName.text = track.artistName
             trackTime.text = track.trackTime
-
+            val isDarkTheme =
+                AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
+            val placeholderResId = if (isDarkTheme) {
+                R.drawable.placeholder_dark
+            } else {
+                R.drawable.placeholder_light
+            }
             Glide.with(itemView)
                 .load(track.artworkUrl100)
-                .placeholder(R.drawable.placeholder)
-                .error(R.drawable.placeholder) // Добавляем обработку ошибок
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .skipMemoryCache(true)
+                .error(placeholderResId)
                 .centerCrop()
                 .transform(RoundedCorners(16))
                 .into(artwork)

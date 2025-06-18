@@ -85,31 +85,13 @@
         <item name="android:src">@drawable/smile_night</item>
     </style>
 
+    <style name="ImageViewErrorsInternen" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:src">@drawable/errorsinternet_dark</item>
+    </style>
+
     <style name="EditTextCursorTheme" parent="ThemeOverlay.AppCompat.Light">
         <item name="colorControlActivated">@color/blue</item>
 
     </style>
 
 </resources>
-
-
-    <!--    <style name="CustomTextAppearance" parent="TextAppearance.Design.Tab">
-            <item name="textAllCaps">false</item>
-            <item name="android:textAllCaps">false</item>
-            <item name="android:textSize">@dimen/text_size</item>
-        </style>-->
-
-    <!--    <style name="CustomSearchView" parent="Widget.AppCompat.SearchView">
-            <item name="android:background">@android:color/transparent</item> &lt;!&ndash; Прозрачный фон &ndash;&gt;
-            <item name="android:icon">@android:color/transparent</item> &lt;!&ndash; Прозрачная иконка &ndash;&gt;
-            <item name="android:queryBackground">@android:color/transparent</item> &lt;!&ndash; Прозрачный фон для запроса &ndash;&gt;
-            <item name="android:searchHintIcon">@android:color/transparent</item> &lt;!&ndash; Прозрачная иконка подсказки &ndash;&gt;
-        </style>-->
-
-    <!--    <style name="MyTabTextAppearance" parent="android:TextAppearance">
-            <item name="android:textAllCaps">false</item>
-            <item name="textAllCaps">false</item>
-            <item name="android:textSize">@dimen/text_tabLayout</item>
-            <item name="android:textColor">@color/black</item>
-            <item name="android:fontFamily">@font/ys_display_medium</item>
-        </style>-->

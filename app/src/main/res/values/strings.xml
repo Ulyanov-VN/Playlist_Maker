@@ -24,5 +24,12 @@
     <string name="terms_url">https://yandex.ru/legal/practicum_offer/</string>
 
     <string name="clear">Очистить</string>
+    
+    <string name="search_nothing">Ничего не нашлось</string>
+
+    <string name="error_text">
+    Проблемы со связью\n\nЗагрузка не удалась. Проверьте подключение к интернету
+    </string>
+    <string name="refresh_button">Обновить</string>
 
 </resources>

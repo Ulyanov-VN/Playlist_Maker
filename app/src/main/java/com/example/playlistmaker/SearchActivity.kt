@@ -1,55 +1,30 @@
 package com.example.playlistmaker
 
-import androidx.activity.viewModels
-import androidx.lifecycle.lifecycleScope
-import com.example.playlistmaker.data.repository.SearchRepository
-import com.example.playlistmaker.network.RetrofitInstance
-import com.example.playlistmaker.ui.search.SearchViewModel
-import com.example.playlistmaker.ui.search.SearchViewModelFactory
-import com.example.playlistmaker.ui.search.SearchUiState
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
-import android.widget.FrameLayout
-import android.widget.ProgressBar
-import android.widget.Button
-import com.example.playlistmaker.R
 import TrackAdapter
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.ImageButton
-import androidx.core.view.ViewCompat
+import android.widget.ProgressBar
+import androidx.activity.viewModels
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.example.playlistmaker.ui.search.SearchUiState
+import com.example.playlistmaker.ui.search.SearchViewModel
+import com.example.playlistmaker.ui.search.SearchViewModelFactory
+import kotlinx.coroutines.launch
 
-fun BottomNavigationView.hide() {
-    if (visibility == View.VISIBLE) {
-        animate()
-            .translationY(height.toFloat())
-            .setDuration(200)
-            .withEndAction { visibility = View.GONE }
-            .start()
-    }
-}
-
-fun BottomNavigationView.show() {
-    if (visibility != View.VISIBLE) {
-        visibility = View.VISIBLE
-        animate()
-            .translationY(0f)
-            .setDuration(200)
-            .start()
-    }
-}
 
 class SearchActivity : BaseActivity() {
     private lateinit var searchEditText: EditText
@@ -67,7 +42,6 @@ class SearchActivity : BaseActivity() {
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
         setContentView(R.layout.activity_search)
 
-        /* window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)*/
         val buttonBack = findViewById<ImageButton>(R.id.icon_button)
         buttonBack.setOnClickListener { finish() }
 
@@ -75,7 +49,6 @@ class SearchActivity : BaseActivity() {
         searchEditText = findViewById(R.id.searchEditText)
         clearButton = findViewById(R.id.clearButton)
 
-       /* setupKeyboardListener()*/
         setupSearchField()
 
         recyclerView = findViewById(R.id.recyclerView)
@@ -86,37 +59,46 @@ class SearchActivity : BaseActivity() {
         contentContainer = findViewById(R.id.mainContent)
         progressBar = ProgressBar(this).apply {
             isIndeterminate = true
+            val params = FrameLayout.LayoutParams(360, 640).apply {
+                gravity = Gravity.CENTER
+            }
+            layoutParams = params
         }
 
-// Подписка на изменения состояния
+        // Изменение состояния
         lifecycleScope.launch {
             viewModel.state.collect { state ->
-                // 1) Скрываем всегда XML-RecyclerView и очищаем контейнер
+                // Скрываем всегда XML-RecyclerView и очищаем контейнер
                 recyclerView.visibility = View.GONE
                 contentContainer.removeAllViews()
 
+
+
                 when (state) {
                     is SearchUiState.Empty -> {
-                        // Ничего не показываем
+                        // Ничего не отображается
                     }
+
                     is SearchUiState.Loading -> {
-                        // Показываем только ProgressBar
+                        // Отображение ProgressBar
                         contentContainer.addView(progressBar)
                     }
+
                     is SearchUiState.Success -> {
-                        // 2) Делаем RecyclerView видимым
+                        // RecyclerView сделали видимым
                         recyclerView.visibility = View.VISIBLE
 
-                        // Обновляем данные адаптера
+                        // Обновление данных адаптера
                         trackAdapter = TrackAdapter(state.tracks)
                         recyclerView.adapter = trackAdapter
 
-                        // Если хотите фильтровать по введённому тексту:
+                        // Фильтр по введённому тексту
                         val searchText = searchEditText.text.toString()
                         trackAdapter.filter(searchText)
                     }
+
                     is SearchUiState.NoResults -> {
-                        // Показываем картинку «пусто»
+                        // Картинка «пусто»
                         val emptyView = layoutInflater.inflate(
                             R.layout.placeholder_empty,
                             contentContainer,
@@ -124,8 +106,9 @@ class SearchActivity : BaseActivity() {
                         )
                         contentContainer.addView(emptyView)
                     }
+
                     is SearchUiState.Error -> {
-                        // 3) Показываем плейсхолдер с «Обновить»
+                        // Плейсхолдер с «Обновить»
                         val errView = layoutInflater.inflate(
                             R.layout.placeholder_error,
                             contentContainer,
@@ -141,16 +124,20 @@ class SearchActivity : BaseActivity() {
     }
 
     private fun setupSearchField() {
-        // 1. Автоматический фокус и показ клавиатуры
+        // Автоматический фокус и показ клавиатуры
         searchEditText.setOnClickListener {
             showKeyboard()
         }
-         // 2. Обработчики взаимодействий
+
+        // Обработчики взаимодействий
         clearButton.setOnClickListener {
             searchEditText.text?.clear()
             hideKeyboard()
             clearButton.visibility = View.GONE
-            trackAdapter.filter("")
+
+            // Установка пустого списка треков в адаптер
+            trackAdapter = TrackAdapter(emptyList())
+            recyclerView.adapter = trackAdapter
         }
 
         searchEditText.setOnClickListener {
@@ -178,10 +165,11 @@ class SearchActivity : BaseActivity() {
                 // Показываем крестик, но не запускаем поиски на каждый ввод
                 clearButton.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
             }
+
             override fun afterTextChanged(s: Editable?) {}
         })
-
     }
+
 
     // Методы управления клавиатурой
     private fun showKeyboard() {

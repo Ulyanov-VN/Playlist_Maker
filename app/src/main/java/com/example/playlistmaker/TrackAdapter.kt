@@ -10,31 +10,41 @@ import com.example.playlistmaker.R
 import com.example.playlistmaker.Track
 import com.example.playlistmaker.TrackViewHolder
 
-class TrackAdapter(private var tracks: List<Track>) : RecyclerView.Adapter<TrackViewHolder>() {
+class TrackAdapter(var tracks: List<Track>) : RecyclerView.Adapter<TrackViewHolder>() {
+    // Создаём копию для полного списка (allTracks)
+    private val allTracks: List<Track> = tracks.toList()
 
-    private val allTracks: List<Track> = tracks.toList() // Создаем копию оригинального списка
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder {
-        return TrackViewHolder(parent) // Теперь ViewHolder сам управляет inflate
-    }
-
+    override fun getItemCount(): Int = tracks.size
     override fun onBindViewHolder(holder: TrackViewHolder, position: Int) {
         holder.bind(tracks[position])
     }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder {
+        return TrackViewHolder(parent)
+    }
 
-    override fun getItemCount(): Int = tracks.size
-
+    // Новая реализация:
     fun filter(query: String) {
-        tracks = if (query.isEmpty()) {
+        val q = query.trim()
+        tracks = if (q.isEmpty()) {
             allTracks
         } else {
             allTracks.filter {
-                it.trackName.contains(query, ignoreCase = true) ||
-                        it.artistName.contains(query, ignoreCase = true)
+                it.trackName.orEmpty().contains(q, ignoreCase = true) ||
+                        it.artistName.orEmpty().contains(q, ignoreCase = true)
             }
         }
         notifyDataSetChanged()
     }
 }
 
-
+/*fun filter(query: String) {
+    tracks = if (query.isEmpty()) {
+        allTracks
+    } else {
+        allTracks.filter {
+            it.trackName.orEmpty().contains(query, ignoreCase = true) ||
+                    it.artistName.orEmpty().contains(query, ignoreCase = true)
+        }
+    }
+    notifyDataSetChanged()
+}*/

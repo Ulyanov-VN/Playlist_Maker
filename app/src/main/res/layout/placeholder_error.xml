@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+        <!-- Обёртка для центрирования всего блока -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp">
+
+                <!-- 1) Иконка ошибки соединения -->
+                <ImageView
+                    android:id="@+id/iconErrorsInternen"
+                    style="@style/ImageViewErrorsInternen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <!-- Отступ между картинкой и текстом -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="12dp" />
+
+                <!-- 2) Сообщение об ошибке, центрировано и в пределах отступов -->
+                <TextView
+                    android:id="@+id/tracksEmptyText2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/error_text"
+                    android:textSize="@dimen/text_search_placeholder"
+                    android:lineSpacingExtra="2dp"
+                    android:gravity="center"
+                    android:fontFamily="@font/ys_display_medium"
+                    android:textFontWeight="400"
+                    android:letterSpacing="0"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <!-- Отступ между текстом и кнопкой -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="12dp" />
+
+                <!-- 3) Кнопка «Обновить» под текстом -->
+                <Button
+                    android:id="@+id/btnRetry"
+                    style="@style/update"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/refresh_button"
+                    android:textSize="@dimen/text_button_refresh"
+                    android:textFontWeight="500"
+                    android:fontFamily="@font/ys_display_medium" />
+
+        </LinearLayout>
+</FrameLayout>
+
+
+

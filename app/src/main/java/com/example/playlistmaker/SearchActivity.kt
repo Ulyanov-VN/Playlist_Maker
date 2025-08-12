@@ -43,11 +43,11 @@ class SearchActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // при повороте очищаем стейт и текст
+/*        // при повороте очищаем стейт и текст
         if (savedInstanceState != null) {
             viewModel.clearState()
             findViewById<EditText>(R.id.searchEditText).setText("")
-        }
+        }*/
 
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
         setContentView(getLayoutId())

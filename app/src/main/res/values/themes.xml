@@ -17,5 +17,9 @@
 
         <item name="colorAccent">@color/text_grey</item>
 
+        <item name="color">@color/text_grey</item>
+        <item name="iconBackgroundColor">@color/ic_player_background_day</item>
+        <item name="iconForegroundColor">@color/white</item>
+
     </style>
 </resources>

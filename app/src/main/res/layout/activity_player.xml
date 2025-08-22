@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSecondary"
+    android:padding="16dp">
+
+    <!-- Кнопка назад -->
+    <ImageButton
+        android:id="@+id/backButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:contentDescription="@string/back"
+        android:src="@drawable/but"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="?attr/colorControlNormal" />
+
+    <!-- Обложка -->
+    <ImageView
+        android:id="@+id/albumArt"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:layout_marginTop="32dp"
+        android:contentDescription="@string/album_art"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/backButton"
+        app:layout_constraintWidth_percent="0.9" />
+
+    <!-- Название трека -->
+    <TextView
+        android:id="@+id/trackName"
+        style="@style/TextAppearance.MaterialComponents.Headline6"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAlignment="viewStart"
+        android:textColor="?attr/colorControlNormal"
+        android:fontFamily="@font/ys_display_medium"
+        android:textSize="@dimen/text_size"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/albumArt" />
+
+    <!-- Исполнитель -->
+    <TextView
+        android:id="@+id/artistName"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAlignment="viewStart"
+        android:textColor="?attr/colorControlNormal"
+        android:fontFamily="@font/ys_display_medium"
+        android:textSize="@dimen/text_tabLayout"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/trackName" />
+
+    <!-- Кнопки управления -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/controlsLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/artistName">
+
+        <!-- Кнопка добавления в плейлист -->
+        <ImageButton
+            android:id="@+id/addToPlaylistButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="64dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/add_to_playlist"
+            android:src="@drawable/ic_playlist"
+            app:layout_constraintBottom_toBottomOf="@id/playPauseButton"
+            app:layout_constraintEnd_toStartOf="@id/playPauseButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/playPauseButton" />
+
+        <!-- Кнопка Play/Pause -->
+        <ImageButton
+            android:id="@+id/playPauseButton"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/play_pause"
+            android:src="@drawable/play_day"
+            app:layout_constraintEnd_toStartOf="@id/favoriteButton"
+            app:layout_constraintStart_toEndOf="@id/addToPlaylistButton"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Кнопка избранного -->
+        <ImageButton
+            android:id="@+id/favoriteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="64dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/add_to_favorites"
+            android:src="@drawable/ic_favorite_border"
+            app:layout_constraintBottom_toBottomOf="@id/playPauseButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/playPauseButton"
+            app:layout_constraintTop_toTopOf="@id/playPauseButton" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Время трека -->
+    <TextView
+        android:id="@+id/trackDuration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="?attr/colorControlNormal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/controlsLayout" />
+
+    <!-- Дополнительная информация -->
+    <TextView
+        android:id="@+id/labelDuration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="@string/duration_label"
+        android:textColor="?attr/color"
+        android:fontFamily="@font/ys_display_regular"
+        android:textSize="@dimen/text_size_13"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/trackDuration" />
+
+    <TextView
+        android:id="@+id/durationValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:gravity="end"
+        android:textColor="?attr/colorControlNormal"
+        android:fontFamily="@font/ys_display_regular"
+        android:textSize="@dimen/text_size_13"
+        app:layout_constraintBaseline_toBaselineOf="@id/labelDuration"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/labelDuration" />
+
+    <!-- Альбом -->
+    <TextView
+        android:id="@+id/labelAlbum"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/album_label"
+        android:textColor="?attr/color"
+        android:fontFamily="@font/ys_display_regular"
+        android:textSize="@dimen/text_size_13"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/labelDuration" />
+
+    <TextView
+        android:id="@+id/albumValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:gravity="end"
+        android:textColor="?attr/colorControlNormal"
+        android:fontFamily="@font/ys_display_regular"
+        android:textSize="@dimen/text_size_13"
+        app:layout_constraintBaseline_toBaselineOf="@id/labelAlbum"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/labelAlbum" />
+
+    <!-- Год -->
+    <TextView
+        android:id="@+id/labelYear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/year_label"
+        android:textColor="?attr/color"
+        android:fontFamily="@font/ys_display_regular"
+        android:textSize="@dimen/text_size_13"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/labelAlbum" />
+
+    <TextView
+        android:id="@+id/yearValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:gravity="end"
+        android:textColor="?attr/colorControlNormal"
+        android:fontFamily="@font/ys_display_regular"
+        android:textSize="@dimen/text_size_13"
+        app:layout_constraintBaseline_toBaselineOf="@id/labelYear"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/labelYear" />
+
+    <!-- Жанр -->
+    <TextView
+        android:id="@+id/labelGenre"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/genre_label"
+        android:textColor="?attr/color"
+        android:fontFamily="@font/ys_display_regular"
+        android:textSize="@dimen/text_size_13"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/labelYear" />
+
+    <TextView
+        android:id="@+id/genreValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:gravity="end"
+        android:textColor="?attr/colorControlNormal"
+        android:fontFamily="@font/ys_display_regular"
+        android:textSize="@dimen/text_size_13"
+        app:layout_constraintBaseline_toBaselineOf="@id/labelGenre"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/labelGenre" />
+
+    <!-- Страна -->
+    <TextView
+        android:id="@+id/labelCountry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/country_label"
+        android:textColor="?attr/color"
+        android:fontFamily="@font/ys_display_regular"
+        android:textSize="@dimen/text_size_13"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/labelGenre" />
+
+    <TextView
+        android:id="@+id/countryValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:gravity="end"
+        android:textColor="?attr/colorControlNormal"
+        android:fontFamily="@font/ys_display_regular"
+        android:textSize="@dimen/text_size_13"
+        app:layout_constraintBaseline_toBaselineOf="@id/labelCountry"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/labelCountry" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

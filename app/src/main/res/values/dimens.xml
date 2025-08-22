@@ -11,7 +11,8 @@
     <dimen name="text_button_refresh">14sp</dimen>
     <dimen name="text_search_placeholder">19sp</dimen>
 
-
+    <dimen name="corner_radius">8dp</dimen>
     <dimen name="history_item_height">72dp</dimen>
 
+    <dimen name="text_size_13">13sp</dimen>
 </resources>

@@ -35,8 +35,26 @@
 
     <string name="history_title">Вы искали</string>
     <string name="clear_history">Очистить историю</string>
+    <string name="back">Back</string>
+    <string name="play_pause">Play/Pause</string>
+    <string name="add_to_playlist">Add to playlist</string>
+    <string name="add_to_favorites">Add to favorites</string>
+    <string name="unknown_album">Unknown album</string>
+    <string name="unknown_year">Unknown year</string>
+    <string name="unknown_genre">Unknown genre</string>
+    <string name="unknown_country">Неизвестная страна</string>
+    <string name="unknown_track">unknown_track</string>
+    <string name="no_genre_info">no_genre_info</string>
+    <string name="unknown_artist">unknown_artist</string>
+    <string name="duration_label">Длительность</string>
+    <string name="album_label">Альбом</string>
+    <string name="year_label">Год</string>
+    <string name="genre_label">Жанр</string>
+    <string name="country_label">Страна</string>
 
 
 
+    <string name="no_album_info">Нет информации об альбоме</string>
+    <string name="album_art">album_art</string>
 
 </resources>

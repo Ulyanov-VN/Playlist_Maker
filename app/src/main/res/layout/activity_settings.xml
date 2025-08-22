@@ -67,7 +67,8 @@
             android:minHeight="48dp"
             android:textColor="?android:attr/textColorPrimary"
             app:trackTint="@color/switch_track"
-            app:thumbTint="@color/switch_thumb" />
+            app:thumbTint="@color/switch_thumb"
+            />
     </LinearLayout>
 
 

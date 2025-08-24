@@ -33,6 +33,8 @@ class PlayerActivity : AppCompatActivity() {
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
         setContentView(R.layout.activity_player)
 
+        findViewById<TextView>(R.id.trackDuration).text = "00:00"
+
         val track = if (intent.hasExtra(TRACK_EXTRA)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 intent.getParcelableExtra(TRACK_EXTRA, Track::class.java)
@@ -67,6 +69,7 @@ class PlayerActivity : AppCompatActivity() {
                     findViewById<TextView>(R.id.durationValue).text = track.trackTimeMillis?.let {
                         formatTime(it)
                     } ?: "--:--"
+                    findViewById<TextView>(R.id.trackDuration).text = "00:00"
                     if (playbackPosition > 0) seekTo(playbackPosition)
                 }
                 setOnCompletionListener {
@@ -224,7 +227,8 @@ class PlayerActivity : AppCompatActivity() {
             isPlaying = false
             playbackPosition = 0
             handler.removeCallbacks(updateTimeRunnable)
-            updateCurrentTime()
+            // Устанавливаем время 00:00 при остановке
+            findViewById<TextView>(R.id.trackDuration).text = "00:00"
             updatePlayPauseButton()
         }
     }

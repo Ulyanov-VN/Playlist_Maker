@@ -5,14 +5,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSecondary"
-    android:padding="16dp">
+    android:background="?attr/colorSecondary">
 
     <!-- Кнопка назад -->
     <ImageButton
         android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
         android:background="?attr/selectableItemBackground"
         android:contentDescription="@string/back"
         android:src="@drawable/but"
@@ -25,14 +26,15 @@
         android:id="@+id/albumArt"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:scaleType="centerCrop"
         android:layout_marginTop="32dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:scaleType="centerCrop"
         android:contentDescription="@string/album_art"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/backButton"
-        app:layout_constraintWidth_percent="0.9" />
+        app:layout_constraintTop_toBottomOf="@id/backButton" />
 
     <!-- Название трека -->
     <TextView
@@ -41,16 +43,14 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:textAlignment="viewStart"
         android:textColor="?attr/colorControlNormal"
         android:fontFamily="@font/ys_display_medium"
         android:textSize="@dimen/text_size"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/albumArt"
+        app:layout_constraintStart_toStartOf="@id/albumArt"
         app:layout_constraintTop_toBottomOf="@id/albumArt" />
 
     <!-- Исполнитель -->
@@ -60,23 +60,20 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:textAlignment="viewStart"
         android:textColor="?attr/colorControlNormal"
         android:fontFamily="@font/ys_display_medium"
         android:textSize="@dimen/text_tabLayout"
-
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/albumArt"
+        app:layout_constraintStart_toStartOf="@id/albumArt"
         app:layout_constraintTop_toBottomOf="@id/trackName" />
 
     <!-- Кнопки управления -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/controlsLayout"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -88,12 +85,11 @@
             android:id="@+id/addToPlaylistButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="64dp"
+            android:layout_marginStart="24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/add_to_playlist"
             android:src="@drawable/ic_playlist"
             app:layout_constraintBottom_toBottomOf="@id/playPauseButton"
-            app:layout_constraintEnd_toStartOf="@id/playPauseButton"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/playPauseButton" />
 
@@ -105,6 +101,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/play_pause"
             android:src="@drawable/play_day"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/favoriteButton"
             app:layout_constraintStart_toEndOf="@id/addToPlaylistButton"
             app:layout_constraintTop_toTopOf="parent" />
@@ -114,13 +111,12 @@
             android:id="@+id/favoriteButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="64dp"
+            android:layout_marginEnd="24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/add_to_favorites"
             android:src="@drawable/ic_favorite_border"
             app:layout_constraintBottom_toBottomOf="@id/playPauseButton"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/playPauseButton"
             app:layout_constraintTop_toTopOf="@id/playPauseButton" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -145,7 +141,7 @@
         android:textColor="?attr/color"
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/albumArt"
         app:layout_constraintTop_toBottomOf="@id/trackDuration" />
 
     <TextView
@@ -160,7 +156,7 @@
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
         app:layout_constraintBaseline_toBaselineOf="@id/labelDuration"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/albumArt"
         app:layout_constraintStart_toEndOf="@id/labelDuration" />
 
     <!-- Альбом -->
@@ -173,7 +169,7 @@
         android:textColor="?attr/color"
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/albumArt"
         app:layout_constraintTop_toBottomOf="@id/labelDuration" />
 
     <TextView
@@ -188,7 +184,7 @@
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
         app:layout_constraintBaseline_toBaselineOf="@id/labelAlbum"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/albumArt"
         app:layout_constraintStart_toEndOf="@id/labelAlbum" />
 
     <!-- Год -->
@@ -201,7 +197,7 @@
         android:textColor="?attr/color"
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/albumArt"
         app:layout_constraintTop_toBottomOf="@id/labelAlbum" />
 
     <TextView
@@ -216,7 +212,7 @@
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
         app:layout_constraintBaseline_toBaselineOf="@id/labelYear"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/albumArt"
         app:layout_constraintStart_toEndOf="@id/labelYear" />
 
     <!-- Жанр -->
@@ -229,7 +225,7 @@
         android:textColor="?attr/color"
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/albumArt"
         app:layout_constraintTop_toBottomOf="@id/labelYear" />
 
     <TextView
@@ -244,7 +240,7 @@
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
         app:layout_constraintBaseline_toBaselineOf="@id/labelGenre"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/albumArt"
         app:layout_constraintStart_toEndOf="@id/labelGenre" />
 
     <!-- Страна -->
@@ -257,7 +253,7 @@
         android:textColor="?attr/color"
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/albumArt"
         app:layout_constraintTop_toBottomOf="@id/labelGenre" />
 
     <TextView
@@ -272,7 +268,7 @@
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
         app:layout_constraintBaseline_toBaselineOf="@id/labelCountry"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/albumArt"
         app:layout_constraintStart_toEndOf="@id/labelCountry" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

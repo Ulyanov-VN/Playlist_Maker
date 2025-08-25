@@ -5,6 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="?attr/colorSecondary">
 
     <!-- Кнопка назад -->
@@ -12,11 +13,12 @@
         android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:padding="12dp"
         android:background="?attr/selectableItemBackground"
         android:contentDescription="@string/back"
-        android:src="@drawable/but"
+        android:src="@drawable/light_mode"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:tint="?attr/colorControlNormal" />
@@ -137,11 +139,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
+        android:layout_marginStart="16dp"
         android:text="@string/duration_label"
         android:textColor="?attr/color"
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
-        app:layout_constraintStart_toStartOf="@id/albumArt"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/trackDuration" />
 
     <TextView
@@ -149,6 +152,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:gravity="end"
@@ -156,7 +160,7 @@
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
         app:layout_constraintBaseline_toBaselineOf="@id/labelDuration"
-        app:layout_constraintEnd_toEndOf="@id/albumArt"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/labelDuration" />
 
     <!-- Альбом -->
@@ -169,7 +173,7 @@
         android:textColor="?attr/color"
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
-        app:layout_constraintStart_toStartOf="@id/albumArt"
+        app:layout_constraintStart_toStartOf="@id/labelDuration"
         app:layout_constraintTop_toBottomOf="@id/labelDuration" />
 
     <TextView
@@ -184,7 +188,7 @@
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
         app:layout_constraintBaseline_toBaselineOf="@id/labelAlbum"
-        app:layout_constraintEnd_toEndOf="@id/albumArt"
+        app:layout_constraintEnd_toEndOf="@id/durationValue"
         app:layout_constraintStart_toEndOf="@id/labelAlbum" />
 
     <!-- Год -->
@@ -197,7 +201,7 @@
         android:textColor="?attr/color"
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
-        app:layout_constraintStart_toStartOf="@id/albumArt"
+        app:layout_constraintStart_toStartOf="@id/labelAlbum"
         app:layout_constraintTop_toBottomOf="@id/labelAlbum" />
 
     <TextView
@@ -212,7 +216,7 @@
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
         app:layout_constraintBaseline_toBaselineOf="@id/labelYear"
-        app:layout_constraintEnd_toEndOf="@id/albumArt"
+        app:layout_constraintEnd_toEndOf="@id/albumValue"
         app:layout_constraintStart_toEndOf="@id/labelYear" />
 
     <!-- Жанр -->
@@ -225,7 +229,7 @@
         android:textColor="?attr/color"
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
-        app:layout_constraintStart_toStartOf="@id/albumArt"
+        app:layout_constraintStart_toStartOf="@id/labelYear"
         app:layout_constraintTop_toBottomOf="@id/labelYear" />
 
     <TextView
@@ -240,7 +244,7 @@
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
         app:layout_constraintBaseline_toBaselineOf="@id/labelGenre"
-        app:layout_constraintEnd_toEndOf="@id/albumArt"
+        app:layout_constraintEnd_toEndOf="@id/yearValue"
         app:layout_constraintStart_toEndOf="@id/labelGenre" />
 
     <!-- Страна -->
@@ -253,7 +257,7 @@
         android:textColor="?attr/color"
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
-        app:layout_constraintStart_toStartOf="@id/albumArt"
+        app:layout_constraintStart_toStartOf="@id/labelGenre"
         app:layout_constraintTop_toBottomOf="@id/labelGenre" />
 
     <TextView
@@ -268,7 +272,7 @@
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_13"
         app:layout_constraintBaseline_toBaselineOf="@id/labelCountry"
-        app:layout_constraintEnd_toEndOf="@id/albumArt"
+        app:layout_constraintEnd_toEndOf="@id/genreValue"
         app:layout_constraintStart_toEndOf="@id/labelCountry" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

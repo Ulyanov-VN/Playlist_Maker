@@ -15,6 +15,12 @@
         <item name="colorAccent">@color/white</item>
 
         <item name="colorOnBackground">@color/white</item>
+
+        <item name="color">@color/text_grey</item>
+
+        <item name="iconBackgroundColor">@color/ic_player_background_night</item>
+        <item name="iconForegroundColor">@color/white</item>
+
     </style>
 
 

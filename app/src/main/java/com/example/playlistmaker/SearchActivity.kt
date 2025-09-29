@@ -1,5 +1,7 @@
 package com.example.playlistmaker
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -27,6 +29,11 @@ import kotlinx.coroutines.launch
 
 class SearchActivity : BaseActivity() {
 
+    companion object {
+        const val EXTRA_FROM_SEARCH = "from_search"
+        private const val REQUEST_CODE_PLAYER = 1001
+    }
+
     override fun getLayoutId() = R.layout.activity_search
 
     private lateinit var searchEditText: EditText
@@ -38,30 +45,31 @@ class SearchActivity : BaseActivity() {
     private lateinit var progressBar: ProgressBar
 
     private lateinit var searchHistory: SearchHistory
-
     private val viewModel: SearchViewModel by viewModels { SearchViewModelFactory() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-/*        // при повороте очищаем стейт и текст
-        if (savedInstanceState != null) {
-            viewModel.clearState()
-            findViewById<EditText>(R.id.searchEditText).setText("")
-        }*/
-
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
         setContentView(getLayoutId())
 
-        // init views
-        searchEditText      = findViewById(R.id.searchEditText)
-        clearButton         = findViewById(R.id.clearButton)
-        recyclerView        = findViewById(R.id.recyclerView)
-        historyRecyclerView = findViewById(R.id.historyRecyclerView)
-        contentContainer    = findViewById(R.id.mainContent)
+        initViews()
+        setupSearchField()
+        setupResultsList()
 
-        val backBtn: ImageButton = findViewById(R.id.icon_button)
-        backBtn.setOnClickListener {
-            onBackPressedDispatcher.onBackPressed() // или finish()
+        if (searchEditText.text.isEmpty()) bindHistory()
+
+        observeViewModelState()
+    }
+
+    private fun initViews() {
+        searchEditText = findViewById(R.id.searchEditText)
+        clearButton = findViewById(R.id.clearButton)
+        recyclerView = findViewById(R.id.recyclerView)
+        historyRecyclerView = findViewById(R.id.historyRecyclerView)
+        contentContainer = findViewById(R.id.mainContent)
+
+        findViewById<ImageButton>(R.id.icon_button).setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
         }
 
         progressBar = ProgressBar(this).apply {
@@ -71,60 +79,85 @@ class SearchActivity : BaseActivity() {
             }
         }
 
-        // history
         searchHistory = SearchHistory(
             getSharedPreferences("search_history_prefs", MODE_PRIVATE)
         )
         historyRecyclerView.layoutManager = LinearLayoutManager(this)
+    }
 
-        setupSearchField()
-        setupResultsList()
-
-        // показать историю при старте, если поле пусто
-        if (searchEditText.text.isEmpty()) bindHistory()
-
+    private fun observeViewModelState() {
         lifecycleScope.launch {
             viewModel.state.collect { state ->
-                // прячем оба списка и контейнер
                 historyRecyclerView.visibility = View.GONE
-                recyclerView.visibility        = View.GONE
+                recyclerView.visibility = View.GONE
                 contentContainer.removeAllViews()
 
                 when (state) {
                     is SearchUiState.Empty -> {
-                        if (searchEditText.text.isEmpty()) {
-                            bindHistory()
-                        }
+                        if (searchEditText.text.isEmpty()) bindHistory()
                     }
                     is SearchUiState.Loading -> {
+                        // Очищаем предыдущие результаты при начале нового поиска
+                        trackAdapter.updateTracks(emptyList())
                         contentContainer.addView(progressBar)
                     }
-                    is SearchUiState.Success -> {
-                        recyclerView.visibility = View.VISIBLE
-                        historyRecyclerView.visibility = View.GONE   // ← принудительно прячем историю
-
-                        trackAdapter = TrackAdapter(state.tracks) { track ->
-                            searchHistory.saveTrack(track)
-                        }
-                        recyclerView.adapter = trackAdapter
-                        trackAdapter.filter(searchEditText.text.toString())
-                        recyclerView.bringToFront()
-                    }
-                    is SearchUiState.NoResults -> {
-                        val emptyView = layoutInflater.inflate(
-                            R.layout.placeholder_empty, contentContainer, false
-                        )
-                        contentContainer.addView(emptyView)
-                    }
-                    is SearchUiState.Error -> {
-                        val errView = layoutInflater.inflate(
-                            R.layout.placeholder_error, contentContainer, false
-                        )
-                        errView.findViewById<Button>(R.id.btnRetry)
-                            .setOnClickListener { viewModel.retry() }
-                        contentContainer.addView(errView)
-                    }
+                    is SearchUiState.Success -> showSearchResults(state.tracks)
+                    is SearchUiState.NoResults -> showEmptyView()
+                    is SearchUiState.Error -> showErrorView()
                 }
+            }
+        }
+    }
+
+    private fun showSearchResults(tracks: List<Track>) {
+        recyclerView.visibility = View.VISIBLE
+        historyRecyclerView.visibility = View.GONE
+        trackAdapter.updateTracks(tracks)
+        recyclerView.bringToFront()
+    }
+
+    private fun showEmptyView() {
+        trackAdapter.updateTracks(emptyList())
+        val emptyView = layoutInflater.inflate(
+            R.layout.placeholder_empty, contentContainer, false
+        )
+        contentContainer.addView(emptyView)
+    }
+
+    private fun showErrorView() {
+        trackAdapter.updateTracks(emptyList())
+        val errView = layoutInflater.inflate(
+            R.layout.placeholder_error, contentContainer, false
+        )
+        errView.findViewById<Button>(R.id.btnRetry).setOnClickListener { viewModel.retry() }
+        contentContainer.addView(errView)
+    }
+
+    private fun openPlayer(track: Track, fromSearch: Boolean) {
+        val intent = Intent(this, PlayerActivity::class.java).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                putExtra(PlayerActivity.TRACK_EXTRA, track)
+            } else {
+                @Suppress("DEPRECATION")
+                putExtra(PlayerActivity.TRACK_EXTRA, track)
+            }
+            putExtra(EXTRA_FROM_SEARCH, fromSearch)
+        }
+        startActivityForResult(intent, REQUEST_CODE_PLAYER)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_PLAYER) {
+            val fromSearch = data?.getBooleanExtra(EXTRA_FROM_SEARCH, false) ?: false
+            if (fromSearch) {
+                viewModel.getLastSearchTerm()?.let { term ->
+                    searchEditText.setText(term)
+                    searchEditText.setSelection(term.length)
+                }
+            } else {
+                searchEditText.text?.clear()
+                bindHistory()
             }
         }
     }
@@ -136,70 +169,71 @@ class SearchActivity : BaseActivity() {
             return
         }
 
-        // 1) Header
         val headerAdapter = object : RecyclerView.Adapter<TextViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-                TextViewHolder(
-                    layoutInflater.inflate(R.layout.item_history_header, parent, false)
-                )
+                TextViewHolder(layoutInflater.inflate(R.layout.item_history_header, parent, false))
             override fun getItemCount() = 1
             override fun onBindViewHolder(holder: TextViewHolder, position: Int) {
                 holder.textView.text = getString(R.string.history_title)
             }
         }
 
-        // 2) Tracks
         val tracksAdapter = TrackAdapter(hist) { track ->
             onHistoryItemClick(track)
+            openPlayer(track, fromSearch = false)
         }
 
-        // 3) Footer
         val footerAdapter = object : RecyclerView.Adapter<ButtonViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-                ButtonViewHolder(
-                    layoutInflater.inflate(R.layout.item_history_footer, parent, false)
-                ).apply {
-                    button.setOnClickListener {
-                        searchHistory.clearHistory()
-                        bindHistory()
+                ButtonViewHolder(layoutInflater.inflate(R.layout.item_history_footer, parent, false))
+                    .apply {
+                        button.setOnClickListener {
+                            searchHistory.clearHistory()
+                            bindHistory()
+                        }
                     }
-                }
             override fun getItemCount() = 1
             override fun onBindViewHolder(holder: ButtonViewHolder, position: Int) {}
         }
 
-        historyRecyclerView.adapter = ConcatAdapter(
-            headerAdapter,
-            tracksAdapter,
-            footerAdapter
-        )
-        historyRecyclerView.visibility = View.VISIBLE
-
-        recyclerView.visibility = View.GONE
-        contentContainer.removeAllViews()
-
         historyRecyclerView.adapter = ConcatAdapter(headerAdapter, tracksAdapter, footerAdapter)
         historyRecyclerView.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
+        contentContainer.removeAllViews()
         historyRecyclerView.bringToFront()
     }
 
     private fun setupResultsList() {
         recyclerView.layoutManager = LinearLayoutManager(this)
-        trackAdapter = TrackAdapter(emptyList()) {}
+        trackAdapter = TrackAdapter(emptyList()) { track ->
+            searchHistory.saveTrack(track)
+            openPlayer(track, fromSearch = true)
+        }
         recyclerView.adapter = trackAdapter
     }
 
     private fun setupSearchField() {
-        searchEditText.setOnClickListener { showKeyboard() }
+        searchEditText.setOnClickListener {
+            // Показываем клавиатуру только при явном клике
+            showKeyboard()
+        }
         clearButton.setOnClickListener {
             searchEditText.text?.clear()
             hideKeyboard()
             clearButton.visibility = View.GONE
             recyclerView.visibility = View.GONE
+            viewModel.clearState()
+            trackAdapter.updateTracks(emptyList()) // Очищаем список треков
             if (searchEditText.hasFocus()) bindHistory()
         }
+
         searchEditText.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            private var currentText = ""
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                currentText = s?.toString() ?: ""
+            }
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val empty = s.isNullOrEmpty()
                 clearButton.visibility = if (empty) View.GONE else View.VISIBLE
@@ -208,15 +242,22 @@ class SearchActivity : BaseActivity() {
                     bindHistory()
                     recyclerView.visibility = View.GONE
                 } else {
-                    historyRecyclerView.visibility = View.GONE   // ← прячем историю при любом вводе
-                    recyclerView.visibility = View.VISIBLE       // ← показываем список результатов
+                    historyRecyclerView.visibility = View.GONE
+                    recyclerView.visibility = View.VISIBLE
                 }
             }
-            override fun afterTextChanged(s: android.text.Editable?) {}
+
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val newText = s?.toString() ?: ""
+                if (newText != currentText) {
+                    trackAdapter.updateTracks(emptyList()) // Очищаем список при изменении текста
+                }
+            }
         })
+
         searchEditText.setOnEditorActionListener { _, actionId, event ->
             val isSearch = actionId == EditorInfo.IME_ACTION_SEARCH
-            val isEnter  = event?.keyCode == android.view.KeyEvent.KEYCODE_ENTER &&
+            val isEnter = event?.keyCode == android.view.KeyEvent.KEYCODE_ENTER &&
                     event.action == android.view.KeyEvent.ACTION_DOWN
             if (isSearch || isEnter) {
                 viewModel.search(searchEditText.text.toString())
@@ -225,7 +266,6 @@ class SearchActivity : BaseActivity() {
             } else false
         }
 
-        /*история исчезает, если фокуса нет или пользователь начал ввод*/
         searchEditText.setOnFocusChangeListener { _, hasFocus ->
             val isEmpty = searchEditText.text.isNullOrEmpty()
             if (hasFocus && isEmpty) {
@@ -234,18 +274,17 @@ class SearchActivity : BaseActivity() {
                 historyRecyclerView.visibility = View.GONE
             }
         }
-
-
     }
 
     private fun onHistoryItemClick(track: Track) {
-        searchHistory.saveTrack(track)        // переместит в начало
+        searchHistory.saveTrack(track)
         searchEditText.setText(track.trackName)
         searchEditText.setSelection(searchEditText.text?.length ?: 0)
         viewModel.search(track.trackName.orEmpty())
     }
 
     private fun showKeyboard() {
+        // Оставляем метод для явного вызова клавиатуры
         searchEditText.post {
             searchEditText.requestFocus()
             WindowCompat.getInsetsController(window, searchEditText)
@@ -260,13 +299,13 @@ class SearchActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (searchEditText.text.isEmpty()) bindHistory()
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+//        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
     }
 
     private class TextViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val textView: TextView = view.findViewById(R.id.textViewHeader)
     }
+
     private class ButtonViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val button: Button = view.findViewById(R.id.clearHistoryFooter)
     }

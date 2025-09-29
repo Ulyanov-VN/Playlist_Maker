@@ -43,17 +43,8 @@ class TrackAdapter(
         }
         notifyDataSetChanged()
     }
-}
-
-
-/*fun filter(query: String) {
-    tracks = if (query.isEmpty()) {
-        allTracks
-    } else {
-        allTracks.filter {
-            it.trackName.orEmpty().contains(query, ignoreCase = true) ||
-                    it.artistName.orEmpty().contains(query, ignoreCase = true)
-        }
+    fun updateTracks(newTracks: List<Track>) {
+        tracks = newTracks
+        notifyDataSetChanged()
     }
-    notifyDataSetChanged()
-}*/
+}

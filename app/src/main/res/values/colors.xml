@@ -16,4 +16,8 @@
 
     <color name="cursor_color">#3772E7</color>
 
+
+    <color name="ic_player_background_night">#40FFFFFF</color>
+    <color name="ic_player_background_day">#401A1B22</color>
+
 </resources>

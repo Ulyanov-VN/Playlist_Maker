@@ -12,10 +12,10 @@ import android.view.WindowManager
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import java.text.SimpleDateFormat
 import java.util.Locale
 
 class PlayerActivity : AppCompatActivity() {
@@ -27,64 +27,118 @@ class PlayerActivity : AppCompatActivity() {
     private var isInPlaylist = false
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var updateTimeRunnable: Runnable
+    private var currentTrack: Track? = null
+    private var isPrepared = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
         setContentView(R.layout.activity_player)
 
+        // Обработка кнопки "Назад"
+        val onBackPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                stopPlayback()
+                val fromSearch = intent.getBooleanExtra(SearchActivity.EXTRA_FROM_SEARCH, false)
+                if (fromSearch) {
+                    setResult(RESULT_OK, Intent().apply {
+                        putExtra(SearchActivity.EXTRA_FROM_SEARCH, true)
+                    })
+                }
+                finish()
+            }
+        }
+        onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
+
         findViewById<TextView>(R.id.trackDuration).text = "00:00"
 
-        val track = if (intent.hasExtra(TRACK_EXTRA)) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                intent.getParcelableExtra(TRACK_EXTRA, Track::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                intent.getParcelableExtra(TRACK_EXTRA)
-            }
+        // Восстанавливаем состояние если есть
+        if (savedInstanceState != null) {
+            restoreState(savedInstanceState)
         } else {
-            null
-        } ?: return
-
-        initMediaPlayer(track)
-        setupBackButton()
-        bindTrackData(track)
-        setupPlayPauseButton()
-        setupOtherButtons()
-
-        updateTimeRunnable = object : Runnable {
-            override fun run() {
-                updateCurrentTime()
-                handler.postDelayed(this, TIME_UPDATE_INTERVAL)
+            // Иначе получаем трек из intent
+            currentTrack = if (intent.hasExtra(TRACK_EXTRA)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableExtra(TRACK_EXTRA, Track::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableExtra(TRACK_EXTRA)
+                }
+            } else {
+                null
             }
+        }
+
+        currentTrack?.let { track ->
+            initMediaPlayer(track)
+            setupBackButton()
+            bindTrackData(track)
+            setupPlayPauseButton()
+            setupOtherButtons()
+
+            updateTimeRunnable = object : Runnable {
+                override fun run() {
+                    updateCurrentTime()
+                    handler.postDelayed(this, TIME_UPDATE_INTERVAL)
+                }
+            }
+        } ?: run {
+            Log.e("PlayerActivity", "No track provided")
+            finish()
         }
     }
 
     private fun initMediaPlayer(track: Track) {
         try {
+            val previewUrl = track.previewUrl
+            if (previewUrl.isNullOrEmpty()) {
+                Log.e("PlayerActivity", "Preview URL is null or empty")
+                showErrorState()
+                return
+            }
+
             mediaPlayer = MediaPlayer().apply {
-                setDataSource(track.previewUrl)
+                setDataSource(previewUrl)
+                setOnErrorListener { mp, what, extra ->
+                    Log.e("PlayerActivity", "MediaPlayer error: what=$what, extra=$extra")
+                    showErrorState()
+                    false
+                }
                 prepareAsync()
                 setOnPreparedListener {
+                    isPrepared = true
                     findViewById<TextView>(R.id.durationValue).text = track.trackTimeMillis?.let {
                         formatTime(it)
                     } ?: "--:--"
                     findViewById<TextView>(R.id.trackDuration).text = "00:00"
-                    if (playbackPosition > 0) seekTo(playbackPosition)
+
+                    // Восстанавливаем позицию воспроизведения после подготовки
+                    if (playbackPosition > 0) {
+                        seekTo(playbackPosition)
+                    }
+
+                    // Автоматически запускаем воспроизведение если было сохранено состояние playing
+                    if (isPlaying) {
+                        startPlayback()
+                    }
                 }
                 setOnCompletionListener {
-                    stopPlayback()
-                    updatePlayPauseButton()
+                    onPlaybackComplete()
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("PlayerActivity", "Error initializing MediaPlayer", e)
+            showErrorState()
         }
+    }
+
+    private fun showErrorState() {
+        findViewById<ImageButton>(R.id.playPauseButton).isEnabled = false
     }
 
     private fun setupBackButton() {
         findViewById<ImageButton>(R.id.backButton).setOnClickListener {
-            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
+            stopPlayback()
             val fromSearch = intent.getBooleanExtra(SearchActivity.EXTRA_FROM_SEARCH, false)
             if (fromSearch) {
                 setResult(RESULT_OK, Intent().apply {
@@ -113,19 +167,15 @@ class PlayerActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.yearValue).text = track.releaseDate?.take(4) ?: getString(R.string.unknown_year)
         findViewById<TextView>(R.id.genreValue).text = track.primaryGenreName ?: getString(R.string.unknown_genre)
 
-        // Преобразование кода страны в название
         val countryName = track.country?.let { countryCode ->
             try {
-                // Получаем локали для страны
                 val locale = Locale("", countryCode)
-                // Получаем название страны на языке системы
-                locale.getDisplayCountry(Locale.getDefault()).takeIf { it.isNotBlank() }
-                    ?: countryCode // Если название пустое, возвращаем код
+                locale.getDisplayCountry(Locale.getDefault()).takeIf { it.isNotBlank() } ?: countryCode
             } catch (e: Exception) {
                 Log.e("PlayerActivity", "Error converting country code: $countryCode", e)
-                countryCode // В случае ошибки возвращаем исходный код
+                countryCode
             }
-        } ?: getString(R.string.unknown_country) // Если countryCode == null
+        } ?: getString(R.string.unknown_country)
 
         findViewById<TextView>(R.id.countryValue).text = countryName
     }
@@ -135,6 +185,72 @@ class PlayerActivity : AppCompatActivity() {
             togglePlayPause()
         }
         updatePlayPauseButton()
+    }
+
+    private fun togglePlayPause() {
+        if (!isPrepared) return
+
+        if (isPlaying) {
+            pausePlayback()
+        } else {
+            mediaPlayer?.let { mp ->
+                // Если трек завершен или почти завершен, начинаем с начала
+                if (mp.currentPosition >= mp.duration - 100 || playbackPosition >= mp.duration - 100) {
+                    resetPlayback()
+                }
+            }
+            startPlayback()
+        }
+    }
+
+    private fun startPlayback() {
+        mediaPlayer?.let {
+            if (isPrepared) {
+                it.start()
+                isPlaying = true
+                updatePlayPauseButton()
+                handler.post(updateTimeRunnable)
+            }
+        }
+    }
+
+    private fun pausePlayback() {
+        mediaPlayer?.let {
+            it.pause()
+            isPlaying = false
+            playbackPosition = it.currentPosition
+            updatePlayPauseButton()
+            handler.removeCallbacks(updateTimeRunnable)
+        }
+    }
+
+    private fun stopPlayback() {
+        mediaPlayer?.let {
+            it.stop()
+            isPlaying = false
+            playbackPosition = 0
+            updatePlayPauseButton()
+            handler.removeCallbacks(updateTimeRunnable)
+            findViewById<TextView>(R.id.trackDuration).text = "00:00"
+        }
+    }
+
+    private fun onPlaybackComplete() {
+        mediaPlayer?.let {
+            isPlaying = false
+            playbackPosition = 0
+            handler.removeCallbacks(updateTimeRunnable)
+            findViewById<TextView>(R.id.trackDuration).text = "00:00"
+            updatePlayPauseButton()
+        }
+    }
+
+    private fun resetPlayback() {
+        mediaPlayer?.let {
+            it.seekTo(0)
+            playbackPosition = 0
+            findViewById<TextView>(R.id.trackDuration).text = "00:00"
+        }
     }
 
     private fun updatePlayPauseButton() {
@@ -158,23 +274,11 @@ class PlayerActivity : AppCompatActivity() {
         addToPlaylistButton.setOnClickListener {
             isInPlaylist = !isInPlaylist
             updatePlaylistButton()
-
-            // Дополнительная логика (можно добавить анимацию или Toast)
-            if (isInPlaylist) {
-                // Трек добавлен в плейлист
-                // showToast("Добавлено в плейлист")
-            } else {
-                // Трек удален из плейлиста
-                // showToast("Удалено из плейлиста")
-            }
-
-            // TODO: Реализовать логику добавления/удаления из плейлиста в базу данных
         }
 
         findViewById<ImageButton>(R.id.favoriteButton).setOnClickListener {
             isFavorite = !isFavorite
             updateFavoriteButton()
-            // TODO: Добавить логику сохранения в избранное
         }
 
         updateFavoriteButton()
@@ -197,50 +301,25 @@ class PlayerActivity : AppCompatActivity() {
         )
     }
 
-    private fun togglePlayPause() {
-        if (isPlaying) pausePlayback() else startPlayback()
-    }
-
-    private fun startPlayback() {
-        mediaPlayer?.let {
-            it.start()
-            isPlaying = true
-            updatePlayPauseButton()
-            handler.post(updateTimeRunnable)
-        }
-    }
-
-    private fun pausePlayback() {
-        mediaPlayer?.let {
-            it.pause()
-            isPlaying = false
-            playbackPosition = it.currentPosition
-            updatePlayPauseButton()
-            handler.removeCallbacks(updateTimeRunnable)
-        }
-    }
-
-    private fun stopPlayback() {
-        mediaPlayer?.let {
-            it.stop()
-            it.reset()
-            isPlaying = false
-            playbackPosition = 0
-            handler.removeCallbacks(updateTimeRunnable)
-            // Устанавливаем время 00:00 при остановке
-            findViewById<TextView>(R.id.trackDuration).text = "00:00"
-            updatePlayPauseButton()
-        }
-    }
-
     private fun updateCurrentTime() {
         mediaPlayer?.let { mp ->
-            findViewById<TextView>(R.id.trackDuration).text = formatTime(mp.currentPosition.toLong())
+            if (isPrepared) {
+                val currentPos = mp.currentPosition
+                findViewById<TextView>(R.id.trackDuration).text = formatTime(currentPos.toLong())
+
+                // Автоматически останавливаем если достигли конца
+                if (currentPos >= mp.duration - 100) {
+                    onPlaybackComplete()
+                }
+            }
         }
     }
 
     private fun formatTime(millis: Long): String {
-        return SimpleDateFormat("mm:ss", Locale.getDefault()).format(millis)
+        val totalSeconds = millis / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
     }
 
     override fun onPause() {
@@ -257,38 +336,47 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        val track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra(TRACK_EXTRA, Track::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra(TRACK_EXTRA)
+        currentTrack?.let {
+            outState.putParcelable(TRACK_EXTRA, it)
         }
-        outState.putParcelable(TRACK_EXTRA, track)
         outState.putBoolean(PLAYBACK_STATE, isPlaying)
         outState.putInt(PLAYBACK_POSITION, playbackPosition)
         outState.putBoolean(FAVORITE_STATE, isFavorite)
         outState.putBoolean(PLAYLIST_STATE, isInPlaylist)
+        outState.putBoolean(PREPARED_STATE, isPrepared)
     }
 
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        val track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    private fun restoreState(savedInstanceState: Bundle) {
+        currentTrack = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             savedInstanceState.getParcelable(TRACK_EXTRA, Track::class.java)
         } else {
             @Suppress("DEPRECATION")
             savedInstanceState.getParcelable(TRACK_EXTRA)
         }
-        track?.let { bindTrackData(it) }
 
         isPlaying = savedInstanceState.getBoolean(PLAYBACK_STATE, false)
         playbackPosition = savedInstanceState.getInt(PLAYBACK_POSITION, 0)
         isFavorite = savedInstanceState.getBoolean(FAVORITE_STATE, false)
         isInPlaylist = savedInstanceState.getBoolean(PLAYLIST_STATE, false)
+        isPrepared = savedInstanceState.getBoolean(PREPARED_STATE, false)
+    }
 
-        updateFavoriteButton()
-        updatePlaylistButton()
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        restoreState(savedInstanceState)
 
-        if (isPlaying) startPlayback()
+        currentTrack?.let { track ->
+            bindTrackData(track)
+            updateFavoriteButton()
+            updatePlaylistButton()
+
+            if (!isPrepared) {
+                initMediaPlayer(track)
+            } else {
+
+                updatePlayPauseButton()
+            }
+        }
     }
 
     companion object {
@@ -297,6 +385,7 @@ class PlayerActivity : AppCompatActivity() {
         const val PLAYBACK_POSITION = "playback_position"
         const val FAVORITE_STATE = "favorite_state"
         const val PLAYLIST_STATE = "playlist_state"
+        const val PREPARED_STATE = "prepared_state"
         private const val TIME_UPDATE_INTERVAL = 500L
     }
 }

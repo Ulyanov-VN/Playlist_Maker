@@ -1,8 +1,11 @@
 package com.example.playlistmaker
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +17,9 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
@@ -31,7 +36,8 @@ class SearchActivity : BaseActivity() {
 
     companion object {
         const val EXTRA_FROM_SEARCH = "from_search"
-        private const val REQUEST_CODE_PLAYER = 1001
+        private const val SEARCH_DEBOUNCE_DELAY = 2000L
+        private const val CLICK_DEBOUNCE_DELAY = 1000L
     }
 
     override fun getLayoutId() = R.layout.activity_search
@@ -46,6 +52,33 @@ class SearchActivity : BaseActivity() {
 
     private lateinit var searchHistory: SearchHistory
     private val viewModel: SearchViewModel by viewModels { SearchViewModelFactory() }
+
+    private val searchHandler = Handler(Looper.getMainLooper())
+    private val searchRunnable = Runnable {
+        val query = searchEditText.text.toString()
+        if (query.isNotEmpty()) {
+            viewModel.search(query)
+        }
+    }
+
+    private var isClickAllowed = true
+    private val clickHandler = Handler(Looper.getMainLooper())
+
+    private val playerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val data = result.data
+        val fromSearch = data?.getBooleanExtra(EXTRA_FROM_SEARCH, false) ?: false
+        if (fromSearch) {
+            viewModel.getLastSearchTerm()?.let { term ->
+                searchEditText.setText(term)
+                searchEditText.setSelection(term.length)
+            }
+        } else {
+            searchEditText.text?.clear()
+            bindHistory()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,7 +109,10 @@ class SearchActivity : BaseActivity() {
             isIndeterminate = true
             layoutParams = FrameLayout.LayoutParams(360, 640).apply {
                 gravity = Gravity.CENTER
+
+
             }
+            indeterminateTintList = ColorStateList.valueOf(ContextCompat.getColor(this@SearchActivity, R.color.blue))
         }
 
         searchHistory = SearchHistory(
@@ -97,7 +133,6 @@ class SearchActivity : BaseActivity() {
                         if (searchEditText.text.isEmpty()) bindHistory()
                     }
                     is SearchUiState.Loading -> {
-                        // Очищаем предыдущие результаты при начале нового поиска
                         trackAdapter.updateTracks(emptyList())
                         contentContainer.addView(progressBar)
                     }
@@ -129,11 +164,15 @@ class SearchActivity : BaseActivity() {
         val errView = layoutInflater.inflate(
             R.layout.placeholder_error, contentContainer, false
         )
-        errView.findViewById<Button>(R.id.btnRetry).setOnClickListener { viewModel.retry() }
+        errView.findViewById<Button>(R.id.btnRetry).setOnClickListener {
+            viewModel.retry()
+        }
         contentContainer.addView(errView)
     }
 
     private fun openPlayer(track: Track, fromSearch: Boolean) {
+        if (!clickDebounce()) return
+
         val intent = Intent(this, PlayerActivity::class.java).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 putExtra(PlayerActivity.TRACK_EXTRA, track)
@@ -143,23 +182,7 @@ class SearchActivity : BaseActivity() {
             }
             putExtra(EXTRA_FROM_SEARCH, fromSearch)
         }
-        startActivityForResult(intent, REQUEST_CODE_PLAYER)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_PLAYER) {
-            val fromSearch = data?.getBooleanExtra(EXTRA_FROM_SEARCH, false) ?: false
-            if (fromSearch) {
-                viewModel.getLastSearchTerm()?.let { term ->
-                    searchEditText.setText(term)
-                    searchEditText.setSelection(term.length)
-                }
-            } else {
-                searchEditText.text?.clear()
-                bindHistory()
-            }
-        }
+        playerLauncher.launch(intent)
     }
 
     private fun bindHistory() {
@@ -214,16 +237,17 @@ class SearchActivity : BaseActivity() {
 
     private fun setupSearchField() {
         searchEditText.setOnClickListener {
-            // Показываем клавиатуру только при явном клике
             showKeyboard()
         }
+
         clearButton.setOnClickListener {
             searchEditText.text?.clear()
             hideKeyboard()
             clearButton.visibility = View.GONE
             recyclerView.visibility = View.GONE
             viewModel.clearState()
-            trackAdapter.updateTracks(emptyList()) // Очищаем список треков
+            trackAdapter.updateTracks(emptyList())
+            searchHandler.removeCallbacks(searchRunnable)
             if (searchEditText.hasFocus()) bindHistory()
         }
 
@@ -241,16 +265,22 @@ class SearchActivity : BaseActivity() {
                 if (empty && searchEditText.hasFocus()) {
                     bindHistory()
                     recyclerView.visibility = View.GONE
+                    searchHandler.removeCallbacks(searchRunnable)
                 } else {
                     historyRecyclerView.visibility = View.GONE
                     recyclerView.visibility = View.VISIBLE
+
+                    if (!s.isNullOrEmpty()) {
+                        searchHandler.removeCallbacks(searchRunnable)
+                        searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
+                    }
                 }
             }
 
             override fun afterTextChanged(s: android.text.Editable?) {
                 val newText = s?.toString() ?: ""
                 if (newText != currentText) {
-                    trackAdapter.updateTracks(emptyList()) // Очищаем список при изменении текста
+                    trackAdapter.updateTracks(emptyList())
                 }
             }
         })
@@ -260,6 +290,7 @@ class SearchActivity : BaseActivity() {
             val isEnter = event?.keyCode == android.view.KeyEvent.KEYCODE_ENTER &&
                     event.action == android.view.KeyEvent.ACTION_DOWN
             if (isSearch || isEnter) {
+                searchHandler.removeCallbacks(searchRunnable)
                 viewModel.search(searchEditText.text.toString())
                 hideKeyboard()
                 true
@@ -276,15 +307,24 @@ class SearchActivity : BaseActivity() {
         }
     }
 
+    private fun clickDebounce(): Boolean {
+        val current = isClickAllowed
+        if (isClickAllowed) {
+            isClickAllowed = false
+            clickHandler.postDelayed({ isClickAllowed = true }, CLICK_DEBOUNCE_DELAY)
+        }
+        return current
+    }
+
     private fun onHistoryItemClick(track: Track) {
         searchHistory.saveTrack(track)
         searchEditText.setText(track.trackName)
         searchEditText.setSelection(searchEditText.text?.length ?: 0)
+        searchHandler.removeCallbacks(searchRunnable)
         viewModel.search(track.trackName.orEmpty())
     }
 
     private fun showKeyboard() {
-        // Оставляем метод для явного вызова клавиатуры
         searchEditText.post {
             searchEditText.requestFocus()
             WindowCompat.getInsetsController(window, searchEditText)
@@ -297,9 +337,10 @@ class SearchActivity : BaseActivity() {
             .hide(WindowInsetsCompat.Type.ime())
     }
 
-    override fun onResume() {
-        super.onResume()
-//        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+    override fun onDestroy() {
+        super.onDestroy()
+        searchHandler.removeCallbacks(searchRunnable)
+        clickHandler.removeCallbacksAndMessages(null)
     }
 
     private class TextViewHolder(view: View) : RecyclerView.ViewHolder(view) {

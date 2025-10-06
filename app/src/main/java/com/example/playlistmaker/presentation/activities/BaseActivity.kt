@@ -1,19 +1,18 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.activities
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.example.playlistmaker.R
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 abstract class BaseActivity : AppCompatActivity() {
 
     protected var bottomNavigationView: BottomNavigationView? = null
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(getLayoutId())
-
 
         bottomNavigationView = findViewById(R.id.bottomNav)
         bottomNavigationView?.let { bnv ->
@@ -21,7 +20,6 @@ abstract class BaseActivity : AppCompatActivity() {
             highlightCurrentMenuItem(bnv)
         }
     }
-
 
     abstract fun getLayoutId(): Int
 
@@ -56,7 +54,6 @@ abstract class BaseActivity : AppCompatActivity() {
             }
         }
     }
-
 
     private fun highlightCurrentMenuItem(bnv: BottomNavigationView) {
         val menu = bnv.menu

@@ -1,13 +1,11 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.activities
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.WindowManager
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -16,26 +14,47 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import java.util.Locale
+import com.example.playlistmaker.R
+import com.example.playlistmaker.creator.Creator
+import com.example.playlistmaker.domain.entity.Track
+import com.example.playlistmaker.domain.interactor.FormatTimeInteractor
+import com.example.playlistmaker.domain.interactor.GetCountryNameInteractor
+import com.example.playlistmaker.domain.interactor.GetCoverArtworkInteractor
+import com.example.playlistmaker.domain.interactor.GetReleaseYearInteractor
+import com.example.playlistmaker.domain.interactor.PlayerInteractor
 
 class PlayerActivity : AppCompatActivity() {
 
-    private var mediaPlayer: MediaPlayer? = null
+    private lateinit var playerInteractor: PlayerInteractor
+    private lateinit var formatTimeInteractor: FormatTimeInteractor
+    private lateinit var getCountryNameInteractor: GetCountryNameInteractor
+    private lateinit var getCoverArtworkInteractor: GetCoverArtworkInteractor
+    private lateinit var getReleaseYearInteractor: GetReleaseYearInteractor
+
     private var isPlaying = false
-    private var playbackPosition = 0
     private var isFavorite = false
     private var isInPlaylist = false
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var updateTimeRunnable: Runnable
     private var currentTrack: Track? = null
-    private var isPrepared = false
+
+    companion object {
+        const val TRACK_EXTRA = "track_extra"
+        private const val TIME_UPDATE_INTERVAL = 500L
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
         setContentView(R.layout.activity_player)
 
-        // Обработка кнопки "Назад"
+        // Инициализация Interactors через Creator
+        playerInteractor = Creator.providePlayerInteractor()
+        formatTimeInteractor = Creator.provideFormatTimeInteractor()
+        getCountryNameInteractor = Creator.provideGetCountryNameInteractor()
+        getCoverArtworkInteractor = Creator.provideGetCoverArtworkInteractor()
+        getReleaseYearInteractor = Creator.provideGetReleaseYearInteractor()
+
         val onBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 stopPlayback()
@@ -52,11 +71,9 @@ class PlayerActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.trackDuration).text = "00:00"
 
-        // Восстанавливаем состояние если есть
         if (savedInstanceState != null) {
             restoreState(savedInstanceState)
         } else {
-            // Иначе получаем трек из intent
             currentTrack = if (intent.hasExtra(TRACK_EXTRA)) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     intent.getParcelableExtra(TRACK_EXTRA, Track::class.java)
@@ -70,7 +87,7 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         currentTrack?.let { track ->
-            initMediaPlayer(track)
+            initPlayer(track)
             setupBackButton()
             bindTrackData(track)
             setupPlayPauseButton()
@@ -83,53 +100,30 @@ class PlayerActivity : AppCompatActivity() {
                 }
             }
         } ?: run {
-            Log.e("PlayerActivity", "No track provided")
             finish()
         }
     }
 
-    private fun initMediaPlayer(track: Track) {
-        try {
-            val previewUrl = track.previewUrl
-            if (previewUrl.isNullOrEmpty()) {
-                Log.e("PlayerActivity", "Preview URL is null or empty")
-                showErrorState()
-                return
+    private fun initPlayer(track: Track) {
+        playerInteractor.setOnPreparedListener {
+            findViewById<TextView>(R.id.durationValue).text =
+                formatTimeInteractor.executeForTrack(track.trackTimeMillis)
+            findViewById<TextView>(R.id.trackDuration).text = "00:00"
+
+            if (isPlaying) {
+                startPlayback()
             }
+        }
 
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(previewUrl)
-                setOnErrorListener { mp, what, extra ->
-                    Log.e("PlayerActivity", "MediaPlayer error: what=$what, extra=$extra")
-                    showErrorState()
-                    false
-                }
-                prepareAsync()
-                setOnPreparedListener {
-                    isPrepared = true
-                    findViewById<TextView>(R.id.durationValue).text = track.trackTimeMillis?.let {
-                        formatTime(it)
-                    } ?: "--:--"
-                    findViewById<TextView>(R.id.trackDuration).text = "00:00"
+        playerInteractor.setOnCompletionListener {
+            onPlaybackComplete()
+        }
 
-                    // Восстанавливаем позицию воспроизведения после подготовки
-                    if (playbackPosition > 0) {
-                        seekTo(playbackPosition)
-                    }
-
-                    // Автоматически запускаем воспроизведение если было сохранено состояние playing
-                    if (isPlaying) {
-                        startPlayback()
-                    }
-                }
-                setOnCompletionListener {
-                    onPlaybackComplete()
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("PlayerActivity", "Error initializing MediaPlayer", e)
+        playerInteractor.setOnErrorListener { errorMessage ->
             showErrorState()
         }
+
+        playerInteractor.initialize(track)
     }
 
     private fun showErrorState() {
@@ -154,8 +148,10 @@ class PlayerActivity : AppCompatActivity() {
         val isDarkTheme = isDarkTheme()
         val placeholderResId = if (isDarkTheme) R.drawable.placeholder_dark else R.drawable.placeholder_light
 
+        val coverUrl = getCoverArtworkInteractor.execute(track.artworkUrl100)
+
         Glide.with(this)
-            .load(track.artworkUrl100?.replace("100x100", "512x512"))
+            .load(coverUrl)
             .placeholder(placeholderResId)
             .error(placeholderResId)
             .transform(RoundedCorners(resources.getDimensionPixelSize(R.dimen.corner_radius)))
@@ -164,19 +160,13 @@ class PlayerActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.trackName).text = track.trackName ?: getString(R.string.unknown_track)
         findViewById<TextView>(R.id.artistName).text = track.artistName ?: getString(R.string.unknown_artist)
         findViewById<TextView>(R.id.albumValue).text = track.collectionName ?: getString(R.string.unknown_album)
-        findViewById<TextView>(R.id.yearValue).text = track.releaseDate?.take(4) ?: getString(R.string.unknown_year)
+
+        val releaseYear = getReleaseYearInteractor.execute(track.releaseDate)
+        findViewById<TextView>(R.id.yearValue).text = releaseYear ?: getString(R.string.unknown_year)
+
         findViewById<TextView>(R.id.genreValue).text = track.primaryGenreName ?: getString(R.string.unknown_genre)
 
-        val countryName = track.country?.let { countryCode ->
-            try {
-                val locale = Locale("", countryCode)
-                locale.getDisplayCountry(Locale.getDefault()).takeIf { it.isNotBlank() } ?: countryCode
-            } catch (e: Exception) {
-                Log.e("PlayerActivity", "Error converting country code: $countryCode", e)
-                countryCode
-            }
-        } ?: getString(R.string.unknown_country)
-
+        val countryName = getCountryNameInteractor.execute(track.country)
         findViewById<TextView>(R.id.countryValue).text = countryName
     }
 
@@ -188,69 +178,42 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun togglePlayPause() {
-        if (!isPrepared) return
+        if (!playerInteractor.isPrepared()) return
 
         if (isPlaying) {
             pausePlayback()
         } else {
-            mediaPlayer?.let { mp ->
-                // Если трек завершен или почти завершен, начинаем с начала
-                if (mp.currentPosition >= mp.duration - 100 || playbackPosition >= mp.duration - 100) {
-                    resetPlayback()
-                }
-            }
             startPlayback()
         }
     }
 
     private fun startPlayback() {
-        mediaPlayer?.let {
-            if (isPrepared) {
-                it.start()
-                isPlaying = true
-                updatePlayPauseButton()
-                handler.post(updateTimeRunnable)
-            }
-        }
+        playerInteractor.play()
+        isPlaying = true
+        updatePlayPauseButton()
+        handler.post(updateTimeRunnable)
     }
 
     private fun pausePlayback() {
-        mediaPlayer?.let {
-            it.pause()
-            isPlaying = false
-            playbackPosition = it.currentPosition
-            updatePlayPauseButton()
-            handler.removeCallbacks(updateTimeRunnable)
-        }
+        playerInteractor.pause()
+        isPlaying = false
+        updatePlayPauseButton()
+        handler.removeCallbacks(updateTimeRunnable)
     }
 
     private fun stopPlayback() {
-        mediaPlayer?.let {
-            it.stop()
-            isPlaying = false
-            playbackPosition = 0
-            updatePlayPauseButton()
-            handler.removeCallbacks(updateTimeRunnable)
-            findViewById<TextView>(R.id.trackDuration).text = "00:00"
-        }
+        playerInteractor.pause()
+        isPlaying = false
+        updatePlayPauseButton()
+        handler.removeCallbacks(updateTimeRunnable)
+        findViewById<TextView>(R.id.trackDuration).text = "00:00"
     }
 
     private fun onPlaybackComplete() {
-        mediaPlayer?.let {
-            isPlaying = false
-            playbackPosition = 0
-            handler.removeCallbacks(updateTimeRunnable)
-            findViewById<TextView>(R.id.trackDuration).text = "00:00"
-            updatePlayPauseButton()
-        }
-    }
-
-    private fun resetPlayback() {
-        mediaPlayer?.let {
-            it.seekTo(0)
-            playbackPosition = 0
-            findViewById<TextView>(R.id.trackDuration).text = "00:00"
-        }
+        isPlaying = false
+        handler.removeCallbacks(updateTimeRunnable)
+        findViewById<TextView>(R.id.trackDuration).text = "00:00"
+        updatePlayPauseButton()
     }
 
     private fun updatePlayPauseButton() {
@@ -302,24 +265,14 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun updateCurrentTime() {
-        mediaPlayer?.let { mp ->
-            if (isPrepared) {
-                val currentPos = mp.currentPosition
-                findViewById<TextView>(R.id.trackDuration).text = formatTime(currentPos.toLong())
+        if (playerInteractor.isPrepared()) {
+            val currentPos = playerInteractor.getCurrentPosition()
+            findViewById<TextView>(R.id.trackDuration).text = formatTimeInteractor.execute(currentPos.toLong())
 
-                // Автоматически останавливаем если достигли конца
-                if (currentPos >= mp.duration - 100) {
-                    onPlaybackComplete()
-                }
+            if (currentPos >= playerInteractor.getDuration() - 100) {
+                onPlaybackComplete()
             }
         }
-    }
-
-    private fun formatTime(millis: Long): String {
-        val totalSeconds = millis / 1000
-        val minutes = totalSeconds / 60
-        val seconds = totalSeconds % 60
-        return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
     }
 
     override fun onPause() {
@@ -329,8 +282,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mediaPlayer?.release()
-        mediaPlayer = null
+        playerInteractor.release()
         handler.removeCallbacks(updateTimeRunnable)
     }
 
@@ -339,11 +291,9 @@ class PlayerActivity : AppCompatActivity() {
         currentTrack?.let {
             outState.putParcelable(TRACK_EXTRA, it)
         }
-        outState.putBoolean(PLAYBACK_STATE, isPlaying)
-        outState.putInt(PLAYBACK_POSITION, playbackPosition)
-        outState.putBoolean(FAVORITE_STATE, isFavorite)
-        outState.putBoolean(PLAYLIST_STATE, isInPlaylist)
-        outState.putBoolean(PREPARED_STATE, isPrepared)
+        outState.putBoolean("is_playing", isPlaying)
+        outState.putBoolean("is_favorite", isFavorite)
+        outState.putBoolean("is_in_playlist", isInPlaylist)
     }
 
     private fun restoreState(savedInstanceState: Bundle) {
@@ -354,11 +304,9 @@ class PlayerActivity : AppCompatActivity() {
             savedInstanceState.getParcelable(TRACK_EXTRA)
         }
 
-        isPlaying = savedInstanceState.getBoolean(PLAYBACK_STATE, false)
-        playbackPosition = savedInstanceState.getInt(PLAYBACK_POSITION, 0)
-        isFavorite = savedInstanceState.getBoolean(FAVORITE_STATE, false)
-        isInPlaylist = savedInstanceState.getBoolean(PLAYLIST_STATE, false)
-        isPrepared = savedInstanceState.getBoolean(PREPARED_STATE, false)
+        isPlaying = savedInstanceState.getBoolean("is_playing", false)
+        isFavorite = savedInstanceState.getBoolean("is_favorite", false)
+        isInPlaylist = savedInstanceState.getBoolean("is_in_playlist", false)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -369,23 +317,7 @@ class PlayerActivity : AppCompatActivity() {
             bindTrackData(track)
             updateFavoriteButton()
             updatePlaylistButton()
-
-            if (!isPrepared) {
-                initMediaPlayer(track)
-            } else {
-
-                updatePlayPauseButton()
-            }
+            updatePlayPauseButton()
         }
-    }
-
-    companion object {
-        const val TRACK_EXTRA = "track_extra"
-        const val PLAYBACK_STATE = "playback_state"
-        const val PLAYBACK_POSITION = "playback_position"
-        const val FAVORITE_STATE = "favorite_state"
-        const val PLAYLIST_STATE = "playlist_state"
-        const val PREPARED_STATE = "prepared_state"
-        private const val TIME_UPDATE_INTERVAL = 500L
     }
 }

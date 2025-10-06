@@ -1,16 +1,17 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.adapters
 
-import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.playlistmaker.databinding.ItemTrackBinding
+import com.example.playlistmaker.domain.entity.Track
+import com.example.playlistmaker.creator.Creator
+import com.example.playlistmaker.domain.interactor.FormatTimeInteractor
 
 class TrackAdapter(
     var tracks: List<Track>,
     private val onTrackClick: (Track) -> Unit = {}
 ) : RecyclerView.Adapter<TrackViewHolder>() {
 
-    // Копия полного списка для фильтрации
+    private val formatTimeInteractor: FormatTimeInteractor = Creator.provideFormatTimeInteractor()
     private val allTracks: List<Track> = tracks.toList()
 
     override fun getItemCount(): Int = tracks.size
@@ -21,16 +22,12 @@ class TrackAdapter(
 
     override fun onBindViewHolder(holder: TrackViewHolder, position: Int) {
         val track = tracks[position]
-        holder.bind(track)
+        holder.bind(track, formatTimeInteractor)
         holder.itemView.setOnClickListener {
             onTrackClick(track)
         }
     }
 
-    /**
-     * Фильтрация по строке запроса.
-     * Если query пустой — показываем всё, иначе только совпадения.
-     */
     fun filter(query: String) {
         val q = query.trim()
         tracks = if (q.isEmpty()) {
@@ -43,6 +40,7 @@ class TrackAdapter(
         }
         notifyDataSetChanged()
     }
+
     fun updateTracks(newTracks: List<Track>) {
         tracks = newTracks
         notifyDataSetChanged()

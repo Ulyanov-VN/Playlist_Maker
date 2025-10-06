@@ -1,7 +1,5 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.activities
 
-import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -10,54 +8,24 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.ImageButton
 import android.widget.LinearLayout
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
-
-object ThemeHelper {
-
-    private const val PREFS_NAME = "theme_prefs"
-    private const val KEY_THEME = "is_night_mode"
-
-    fun applyTheme(activity: Activity) {
-        val prefs = activity.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val isNightMode = prefs.getBoolean(KEY_THEME, false)
-        setNightMode(isNightMode)
-    }
-
-    fun toggleTheme(activity: Activity, isNightMode: Boolean) {
-        setNightMode(isNightMode)
-        saveTheme(activity, isNightMode)
-    }
-
-    private fun setNightMode(isNightMode: Boolean) {
-        AppCompatDelegate.setDefaultNightMode(
-            if (isNightMode) AppCompatDelegate.MODE_NIGHT_YES
-            else AppCompatDelegate.MODE_NIGHT_NO
-        )
-    }
-
-    private fun saveTheme(activity: Activity, isNightMode: Boolean) {
-        activity.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean(KEY_THEME, isNightMode)
-            .apply()
-    }
-}
+import com.example.playlistmaker.R
+import com.example.playlistmaker.creator.Creator
+import com.example.playlistmaker.presentation.common.ThemeHelper
 
 class SettingsActivity : BaseActivity() {
+
     override fun getLayoutId(): Int = R.layout.activity_settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Применяем текущую тему (если нужно, перенеси в BaseActivity перед setContentView)
+        val manageThemeInteractor = Creator.provideManageThemeInteractor(this)
         ThemeHelper.applyTheme(this)
 
-        // Кнопка "назад"
         val buttonBack = findViewById<ImageButton>(R.id.icon_button)
         buttonBack.setOnClickListener { finish() }
 
-        // Пункты меню
         val lineShareApp = findViewById<LinearLayout>(R.id.line_share_app)
         lineShareApp.setOnClickListener { shareApp() }
 
@@ -67,16 +35,15 @@ class SettingsActivity : BaseActivity() {
         val lineArrow = findViewById<LinearLayout>(R.id.line_arrow)
         lineArrow.setOnClickListener { openTerms() }
 
-        // Переключатель темы + программная подсветка синим
         val themeSwitch = findViewById<SwitchCompat>(R.id.themeSwitch)
-        val prefs = getSharedPreferences("theme_prefs", MODE_PRIVATE)
-        themeSwitch.isChecked = prefs.getBoolean("is_night_mode", false)
+        themeSwitch.isChecked = manageThemeInteractor.isDarkThemeEnabled()
 
-        tintBlue(themeSwitch) // ← подсветка по состоянию checked
+        tintBlue(themeSwitch)
 
         themeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            manageThemeInteractor.setDarkThemeEnabled(isChecked)
             ThemeHelper.toggleTheme(this, isChecked)
-            recreate() // Пересоздаем активити для применения темы
+            recreate()
         }
     }
 
@@ -105,23 +72,20 @@ class SettingsActivity : BaseActivity() {
         startActivity(intent)
     }
 
-    /** Тонируем SwitchCompat: синий во включенном состоянии */
     private fun tintBlue(s: SwitchCompat) {
         val states = arrayOf(
-            intArrayOf(android.R.attr.state_checked),     // ВКЛ
-            intArrayOf(-android.R.attr.state_checked)     // ВЫКЛ
+            intArrayOf(android.R.attr.state_checked),
+            intArrayOf(-android.R.attr.state_checked)
         )
         val thumbColors = intArrayOf(
-            Color.parseColor("#3772E7"), // кружок: синий (on)
-            Color.parseColor("#AEAFB4")  // кружок: серый (off)
+            Color.parseColor("#3772E7"),
+            Color.parseColor("#AEAFB4")
         )
         val trackColors = intArrayOf(
-            Color.parseColor("#9FBBF3"), // дорожка: голубой (on)
-            Color.parseColor("#E6E8EB")  // дорожка: светло-серый (off)
+            Color.parseColor("#9FBBF3"),
+            Color.parseColor("#E6E8EB")
         )
         s.thumbTintList = ColorStateList(states, thumbColors)
         s.trackTintList = ColorStateList(states, trackColors)
     }
 }
-
-

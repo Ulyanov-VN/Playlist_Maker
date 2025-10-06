@@ -1,15 +1,20 @@
-package com.example.playlistmaker.ui.search
+package com.example.playlistmaker.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.playlistmaker.Track
-import com.example.playlistmaker.data.repository.SearchRepository
+import com.example.playlistmaker.domain.entity.Track
+import com.example.playlistmaker.domain.interactor.ManageSearchHistoryInteractor
+import com.example.playlistmaker.domain.interactor.SearchTracksInteractor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class SearchViewModel(private val repo: SearchRepository) : ViewModel() {
+class SearchViewModel(
+    private val searchTracksInteractor: SearchTracksInteractor,
+    private val manageSearchHistoryInteractor: ManageSearchHistoryInteractor
+) : ViewModel() {
+
     private val _state = MutableStateFlow<SearchUiState>(SearchUiState.Empty)
     val state: StateFlow<SearchUiState> = _state.asStateFlow()
 
@@ -23,11 +28,11 @@ class SearchViewModel(private val repo: SearchRepository) : ViewModel() {
         viewModelScope.launch {
             _state.value = SearchUiState.Loading
             try {
-                val resp = repo.searchSongs(term)
-                lastSearchResults = resp.results
+                val tracks = searchTracksInteractor.execute(term)
+                lastSearchResults = tracks
                 _state.value = when {
-                    resp.resultCount > 0 -> SearchUiState.Success(resp.results)
-                    else                 -> SearchUiState.NoResults
+                    tracks.isNotEmpty() -> SearchUiState.Success(tracks)
+                    else -> SearchUiState.NoResults
                 }
             } catch (e: Exception) {
                 _state.value = SearchUiState.Error
@@ -35,23 +40,26 @@ class SearchViewModel(private val repo: SearchRepository) : ViewModel() {
         }
     }
 
+    fun getHistory(): List<Track> {
+        return manageSearchHistoryInteractor.getSearchHistory()
+    }
+
+    fun saveTrackToHistory(track: Track) {
+        manageSearchHistoryInteractor.addTrackToHistory(track)
+    }
+
+    fun clearHistory() {
+        manageSearchHistoryInteractor.clearSearchHistory()
+    }
+
     fun retry() {
         lastTerm?.let { search(it) }
     }
 
-    /**
-     * Возвращает последний поисковый запрос
-     */
     fun getLastSearchTerm(): String? = lastTerm
 
-    /**
-     * Возвращает последние результаты поиска
-     */
     fun getLastSearchResults(): List<Track> = lastSearchResults
 
-    /**
-     * Восстанавливает последний поисковый запрос без выполнения нового запроса
-     */
     fun restoreLastSearch() {
         lastTerm?.let { term ->
             _state.value = when {
@@ -61,19 +69,8 @@ class SearchViewModel(private val repo: SearchRepository) : ViewModel() {
         }
     }
 
-    /**
-     * Сбрасывает текущее состояние в Empty и очищает последний терм
-     */
     fun clearState() {
         lastTerm = null
         _state.value = SearchUiState.Empty
-    }
-
-    /**
-     * Только сбрасывает последний терм,
-     * не меняя при этом UI-состояние (если это когда-нибудь понадобится)
-     */
-    fun clearLastTerm() {
-        lastTerm = null
     }
 }

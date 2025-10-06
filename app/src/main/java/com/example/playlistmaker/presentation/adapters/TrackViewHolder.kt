@@ -1,4 +1,4 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -7,7 +7,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.example.playlistmaker.R
 import com.example.playlistmaker.databinding.ItemTrackBinding
+import com.example.playlistmaker.domain.entity.Track
+import com.example.playlistmaker.domain.interactor.FormatTimeInteractor
 
 class TrackViewHolder(
     parent: ViewGroup,
@@ -18,11 +21,12 @@ class TrackViewHolder(
     )
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(track: Track) {
+    fun bind(track: Track, formatTimeInteractor: FormatTimeInteractor) {
         with(binding) {
             trackName.text = track.trackName
             artistName.text = track.artistName
-            trackTime.text = track.trackTime
+            trackTime.text = formatTimeInteractor.executeForTrack(track.trackTimeMillis)
+
             val isDarkTheme =
                 AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
             val placeholderResId = if (isDarkTheme) {
@@ -30,6 +34,7 @@ class TrackViewHolder(
             } else {
                 R.drawable.placeholder_light
             }
+
             Glide.with(itemView)
                 .load(track.artworkUrl100)
                 .diskCacheStrategy(DiskCacheStrategy.NONE)

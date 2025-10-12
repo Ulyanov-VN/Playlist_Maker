@@ -2,15 +2,25 @@ package com.example.playlistmaker.presentation.activities
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatActivity
 import com.example.playlistmaker.R
+import com.example.playlistmaker.di.Creator
+import com.example.playlistmaker.domain.interactor.ManageThemeInteractor
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 abstract class BaseActivity : AppCompatActivity() {
 
     protected var bottomNavigationView: BottomNavigationView? = null
+    protected lateinit var manageThemeInteractor: ManageThemeInteractor
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Инициализация интерактора перед setContentView
+        manageThemeInteractor = Creator.provideManageThemeInteractor(this)
+
+        // Применение темы
+        applyTheme()
+
         super.onCreate(savedInstanceState)
         setContentView(getLayoutId())
 
@@ -22,6 +32,28 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     abstract fun getLayoutId(): Int
+
+    protected fun applyTheme() {
+        val isNightMode = manageThemeInteractor.isDarkThemeEnabled()
+        setNightMode(isNightMode)
+    }
+
+    protected fun setNightMode(isNightMode: Boolean) {
+        AppCompatDelegate.setDefaultNightMode(
+            if (isNightMode) AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+        )
+    }
+
+    protected fun toggleTheme(): Boolean {
+        val currentState = manageThemeInteractor.isDarkThemeEnabled()
+        val newState = !currentState
+
+        manageThemeInteractor.setDarkThemeEnabled(newState)
+        setNightMode(newState)
+
+        return newState
+    }
 
     private fun setupBottomNavigation(bnv: BottomNavigationView) {
         bnv.setOnItemSelectedListener { menuItem ->

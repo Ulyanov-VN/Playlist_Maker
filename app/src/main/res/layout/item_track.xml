@@ -39,37 +39,47 @@
             android:maxLines="1"
             android:ellipsize="end" />
 
-        <!-- Артист • Длительность -->
-        <LinearLayout
+        <!-- Артист • Длительность - ИСПРАВЛЕННЫЙ ВАРИАНТ -->
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="2dp"
-            android:baselineAligned="true">
+            android:layout_marginTop="2dp">
 
-            <!-- Имя исполнителя: занимает всё доступное, режем с конца -->
+            <!-- Имя исполнителя -->
             <TextView
                 android:id="@+id/artistName"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:textColor="?attr/colorAccent"
                 android:textSize="@dimen/text_size_AlbumGroupTime"
                 android:textFontWeight="400"
                 android:fontFamily="@font/ys_text_regular"
                 android:maxLines="1"
-                android:ellipsize="end" />
+                android:ellipsize="end"
+                app:layout_constraintWidth_default="wrap"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/dividerDot"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <!-- Точка-разделитель -->
             <ImageView
+                android:id="@+id/dividerDot"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="6dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:src="@drawable/ellipse_1"
-                app:tint="?attr/colorAccent" />
+                app:tint="?attr/colorAccent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/trackTime"
+                app:layout_constraintStart_toEndOf="@id/artistName"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- Длительность: всегда видна -->
+            <!-- Длительность -->
             <TextView
                 android:id="@+id/trackTime"
                 android:layout_width="wrap_content"
@@ -77,8 +87,14 @@
                 android:textColor="?attr/colorAccent"
                 android:textSize="@dimen/text_size_AlbumGroupTime"
                 android:textFontWeight="400"
-                android:fontFamily="@font/ys_text_regular" />
-        </LinearLayout>
+                android:fontFamily="@font/ys_text_regular"
+                android:maxLines="1"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/dividerDot"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>
 
     <!-- Стрелка справа -->

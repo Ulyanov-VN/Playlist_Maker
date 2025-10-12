@@ -10,8 +10,8 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.appcompat.widget.SwitchCompat
 import com.example.playlistmaker.R
-import com.example.playlistmaker.creator.Creator
-import com.example.playlistmaker.presentation.common.ThemeHelper
+import com.example.playlistmaker.di.Creator
+import com.example.playlistmaker.domain.interactor.ManageThemeInteractor
 
 class SettingsActivity : BaseActivity() {
 
@@ -19,9 +19,6 @@ class SettingsActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val manageThemeInteractor = Creator.provideManageThemeInteractor(this)
-        ThemeHelper.applyTheme(this)
 
         val buttonBack = findViewById<ImageButton>(R.id.icon_button)
         buttonBack.setOnClickListener { finish() }
@@ -42,7 +39,7 @@ class SettingsActivity : BaseActivity() {
 
         themeSwitch.setOnCheckedChangeListener { _, isChecked ->
             manageThemeInteractor.setDarkThemeEnabled(isChecked)
-            ThemeHelper.toggleTheme(this, isChecked)
+            setNightMode(isChecked)
             recreate()
         }
     }

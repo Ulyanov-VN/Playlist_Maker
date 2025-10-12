@@ -1,24 +1,15 @@
-package com.example.playlistmaker.creator
+package com.example.playlistmaker.di
 
 import android.content.Context
 import com.example.playlistmaker.data.mapper.TrackMapper
 import com.example.playlistmaker.data.network.RetrofitInstance
 import com.example.playlistmaker.data.repository.HistoryRepositoryImpl
+import com.example.playlistmaker.data.repository.MediaRepositoryImpl
 import com.example.playlistmaker.data.repository.SearchRepositoryImpl
 import com.example.playlistmaker.data.repository.SettingsRepositoryImpl
-import com.example.playlistmaker.domain.interactor.FormatTimeInteractor
-import com.example.playlistmaker.domain.interactor.GetCountryNameInteractor
-import com.example.playlistmaker.domain.interactor.GetCoverArtworkInteractor
-import com.example.playlistmaker.domain.interactor.GetReleaseYearInteractor
-import com.example.playlistmaker.domain.interactor.ManageSearchHistoryInteractor
-import com.example.playlistmaker.domain.interactor.ManageSearchHistoryInteractorImpl
-import com.example.playlistmaker.domain.interactor.ManageThemeInteractor
-import com.example.playlistmaker.domain.interactor.ManageThemeInteractorImpl
-import com.example.playlistmaker.domain.interactor.PlayerInteractor
-import com.example.playlistmaker.domain.interactor.PlayerInteractorImpl
-import com.example.playlistmaker.domain.interactor.SearchTracksInteractor
-import com.example.playlistmaker.domain.interactor.SearchTracksInteractorImpl
+import com.example.playlistmaker.domain.interactor.*
 import com.example.playlistmaker.domain.repository.HistoryRepository
+import com.example.playlistmaker.domain.repository.MediaRepository
 import com.example.playlistmaker.domain.repository.SearchRepository
 import com.example.playlistmaker.domain.repository.SettingsRepository
 
@@ -43,6 +34,11 @@ object Creator {
         )
     }
 
+
+    private fun provideMediaRepository(): MediaRepository {
+        return MediaRepositoryImpl()
+    }
+
     fun provideSearchTracksInteractor(): SearchTracksInteractor {
         return SearchTracksInteractorImpl(provideSearchRepository())
     }
@@ -56,22 +52,22 @@ object Creator {
     }
 
     fun provideFormatTimeInteractor(): FormatTimeInteractor {
-        return FormatTimeInteractor()
+        return FormatTimeInteractorImpl()
     }
 
     fun provideGetCountryNameInteractor(): GetCountryNameInteractor {
-        return GetCountryNameInteractor()
+        return GetCountryNameInteractorImpl()
     }
 
     fun provideGetCoverArtworkInteractor(): GetCoverArtworkInteractor {
-        return GetCoverArtworkInteractor()
+        return GetCoverArtworkInteractorImpl()
     }
 
     fun provideGetReleaseYearInteractor(): GetReleaseYearInteractor {
-        return GetReleaseYearInteractor()
+        return GetReleaseYearInteractorImpl()
     }
 
     fun providePlayerInteractor(): PlayerInteractor {
-        return PlayerInteractorImpl()
+        return PlayerInteractorImpl(provideMediaRepository())
     }
 }

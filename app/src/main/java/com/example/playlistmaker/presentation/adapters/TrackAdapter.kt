@@ -3,7 +3,7 @@ package com.example.playlistmaker.presentation.adapters
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.playlistmaker.domain.entity.Track
-import com.example.playlistmaker.creator.Creator
+import com.example.playlistmaker.di.Creator
 import com.example.playlistmaker.domain.interactor.FormatTimeInteractor
 
 class TrackAdapter(

@@ -28,7 +28,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.playlistmaker.R
 import com.example.playlistmaker.databinding.ActivitySearchBinding
-import com.example.playlistmaker.creator.Creator
+import com.example.playlistmaker.di.Creator
 import com.example.playlistmaker.domain.entity.Track
 import com.example.playlistmaker.presentation.adapters.TrackAdapter
 import com.example.playlistmaker.presentation.viewmodels.SearchUiState
@@ -37,12 +37,6 @@ import com.example.playlistmaker.presentation.viewmodels.SearchViewModelFactory
 import kotlinx.coroutines.launch
 
 class SearchActivity : BaseActivity() {
-
-    companion object {
-        const val EXTRA_FROM_SEARCH = "from_search"
-        private const val SEARCH_DEBOUNCE_DELAY = 2000L
-        private const val CLICK_DEBOUNCE_DELAY = 1000L
-    }
 
     override fun getLayoutId() = R.layout.activity_search
 
@@ -350,5 +344,10 @@ class SearchActivity : BaseActivity() {
 
     private class ButtonViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val button: Button = view.findViewById(R.id.clearHistoryFooter)
+    }
+    companion object {
+        const val EXTRA_FROM_SEARCH = "from_search"
+        private const val SEARCH_DEBOUNCE_DELAY = 2000L
+        private const val CLICK_DEBOUNCE_DELAY = 1000L
     }
 }

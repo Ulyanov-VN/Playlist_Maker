@@ -3,14 +3,11 @@ package com.example.playlistmaker.presentation.activities
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
-import androidx.appcompat.app.AppCompatActivity
 import com.example.playlistmaker.R
-import com.example.playlistmaker.presentation.common.ThemeHelper
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ThemeHelper.applyTheme(this)
         setContentView(R.layout.activity_main)
 
         findViewById<Button>(R.id.btnSearch).setOnClickListener {
@@ -25,4 +22,6 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
     }
+
+    override fun getLayoutId(): Int = R.layout.activity_main
 }

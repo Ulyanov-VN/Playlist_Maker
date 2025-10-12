@@ -19,7 +19,6 @@ class SearchViewModel(
     val state: StateFlow<SearchUiState> = _state.asStateFlow()
 
     private var lastTerm: String? = null
-    private var lastSearchResults: List<Track> = emptyList()
 
     fun search(term: String) {
         if (term.isBlank()) return
@@ -29,7 +28,6 @@ class SearchViewModel(
             _state.value = SearchUiState.Loading
             try {
                 val tracks = searchTracksInteractor.execute(term)
-                lastSearchResults = tracks
                 _state.value = when {
                     tracks.isNotEmpty() -> SearchUiState.Success(tracks)
                     else -> SearchUiState.NoResults
@@ -57,17 +55,6 @@ class SearchViewModel(
     }
 
     fun getLastSearchTerm(): String? = lastTerm
-
-    fun getLastSearchResults(): List<Track> = lastSearchResults
-
-    fun restoreLastSearch() {
-        lastTerm?.let { term ->
-            _state.value = when {
-                lastSearchResults.isNotEmpty() -> SearchUiState.Success(lastSearchResults)
-                else -> SearchUiState.Empty
-            }
-        }
-    }
 
     fun clearState() {
         lastTerm = null

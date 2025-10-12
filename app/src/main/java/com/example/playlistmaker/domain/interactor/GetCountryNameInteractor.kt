@@ -2,8 +2,12 @@ package com.example.playlistmaker.domain.interactor
 
 import java.util.Locale
 
-class GetCountryNameInteractor {
-    fun execute(countryCode: String?): String {
+interface GetCountryNameInteractor {
+    fun execute(countryCode: String?): String
+}
+
+class GetCountryNameInteractorImpl : GetCountryNameInteractor {
+    override fun execute(countryCode: String?): String {
         return countryCode?.let { code ->
             try {
                 val locale = Locale("", code)

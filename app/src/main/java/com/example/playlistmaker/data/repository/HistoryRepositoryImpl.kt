@@ -10,11 +10,6 @@ class HistoryRepositoryImpl(
     private val prefs: SharedPreferences
 ) : HistoryRepository {
 
-    companion object {
-        private const val KEY_HISTORY = "search_history"
-        private const val MAX_SIZE = 10
-    }
-
     private val gson = Gson()
     private val type = object : TypeToken<List<Track>>() {}.type
 
@@ -37,5 +32,10 @@ class HistoryRepositoryImpl(
 
     override fun clearHistory() {
         prefs.edit().remove(KEY_HISTORY).apply()
+    }
+
+    companion object {
+        private const val KEY_HISTORY = "search_history"
+        private const val MAX_SIZE = 10
     }
 }

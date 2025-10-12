@@ -1,7 +1,11 @@
 package com.example.playlistmaker.domain.interactor
 
-class GetReleaseYearInteractor {
-    fun execute(releaseDate: String?): String? {
+interface GetReleaseYearInteractor {
+    fun execute(releaseDate: String?): String?
+}
+
+class GetReleaseYearInteractorImpl : GetReleaseYearInteractor {
+    override fun execute(releaseDate: String?): String? {
         return releaseDate?.take(4)
     }
 }

@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
     android:orientation="vertical"
-    tools:context=".SettingsActivity">
+    tools:context=".settings.ui.SettingsActivity">
 
 
     <!-- Головешка -->

@@ -1,10 +1,11 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.activities
 
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.example.playlistmaker.R
 import com.google.android.material.tabs.TabLayout
 
 class MediaActivity : BaseActivity() {
@@ -18,35 +19,26 @@ class MediaActivity : BaseActivity() {
         val tracksTab = findViewById<ConstraintLayout>(R.id.tracksTab)
         val playlistsTab = findViewById<ConstraintLayout>(R.id.playlistsTab)
 
-
         val tracksImage = tracksTab.findViewById<ImageView>(R.id.iconSmile)
         val tracksText = tracksTab.findViewById<TextView>(R.id.tracksEmptyText)
-
 
         val playlistsImage = playlistsTab.findViewById<ImageView>(R.id.iconSmile2)
         val playlistsText = playlistsTab.findViewById<TextView>(R.id.playlistsEmptyText)
 
-        // Определяем текущую тему
         val isNightTheme =
             when (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) {
                 android.content.res.Configuration.UI_MODE_NIGHT_YES -> true
                 else -> false
             }
-        // Установка изображений в зависимости от темы
+
         val smileIcon = if (isNightTheme) R.drawable.smile_night else R.drawable.smile
 
         tracksImage.setImageResource(smileIcon)
         playlistsImage.setImageResource(smileIcon)
 
-
-        // Установка изображений и текстов
-        tracksImage.setImageResource(R.drawable.smile)
         tracksText.text = getString(R.string.text_favorite_tracks)
-
-        playlistsImage.setImageResource(R.drawable.smile)
         playlistsText.text = getString(R.string.text_playlist)
 
-        // Обработчик переключения вкладок
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 when (tab?.position) {
@@ -54,7 +46,6 @@ class MediaActivity : BaseActivity() {
                         tracksTab.visibility = View.VISIBLE
                         playlistsTab.visibility = View.GONE
                     }
-
                     1 -> {
                         tracksTab.visibility = View.GONE
                         playlistsTab.visibility = View.VISIBLE

@@ -22,10 +22,11 @@ class SettingsActivity : BaseActivity() {
     override fun getLayoutId(): Int = R.layout.activity_settings
 
     private val viewModel: SettingsViewModel by viewModels {
-        SettingsViewModelFactory(Creator.provideManageThemeInteractor(this))
+        SettingsViewModelFactory(
+            Creator.provideManageThemeInteractor(this),
+            Creator.provideSharingInteractor(this)
+        )
     }
-
-    private val sharingInteractor: SharingInteractor = Creator.provideSharingInteractor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,7 +56,8 @@ class SettingsActivity : BaseActivity() {
     }
 
     private fun shareApp() {
-        val shareText = sharingInteractor.getShareAppContent()
+        val shareText = viewModel.getShareAppContent()
+
         Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, shareText)
@@ -64,7 +66,8 @@ class SettingsActivity : BaseActivity() {
     }
 
     private fun contactSupport() {
-        val (email, subject, body) = sharingInteractor.getSupportEmailData()
+        val (email, subject, body) = viewModel.getSupportEmailData()
+
         Intent(Intent.ACTION_SENDTO).apply {
             data = Uri.parse("mailto:")
             putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
@@ -75,7 +78,8 @@ class SettingsActivity : BaseActivity() {
     }
 
     private fun openTerms() {
-        val termsUrl = sharingInteractor.getTermsUrl()
+        val termsUrl = viewModel.getTermsUrl()
+
         Log.d("SettingsActivity", "Opening URL: $termsUrl")
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(termsUrl))
         startActivity(intent)

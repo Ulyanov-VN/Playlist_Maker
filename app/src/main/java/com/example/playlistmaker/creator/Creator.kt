@@ -18,8 +18,9 @@ import com.example.playlistmaker.settings.data.repository.SettingsRepositoryImpl
 import com.example.playlistmaker.settings.domain.interactor.ManageThemeInteractor
 import com.example.playlistmaker.settings.domain.interactor.ManageThemeInteractorImpl
 import com.example.playlistmaker.settings.domain.repository.SettingsRepository
+import com.example.playlistmaker.sharing.data.repository.SharingInteractorImpl
 import com.example.playlistmaker.sharing.domain.interactor.SharingInteractor
-import com.example.playlistmaker.sharing.domain.interactor.SharingInteractorImpl
+
 
 object Creator {
 
@@ -83,7 +84,7 @@ object Creator {
     }
 
 
-    fun provideSharingInteractor(): SharingInteractor {
-        return SharingInteractorImpl()
+    fun provideSharingInteractor(context: Context): SharingInteractor {
+        return SharingInteractorImpl(context)
     }
 }

@@ -2,11 +2,11 @@ package com.example.playlistmaker.sharing.data.repository
 
 import android.content.Context
 import com.example.playlistmaker.R
-import com.example.playlistmaker.sharing.domain.interactor.SharingInteractor
+import com.example.playlistmaker.sharing.domain.repository.SharingRepository
 
-class SharingInteractorImpl(
+class SharingRepositoryImpl(
     private val context: Context
-) : SharingInteractor {
+) : SharingRepository {
 
     override fun getShareAppContent(): String =
         context.getString(R.string.share_app_text)

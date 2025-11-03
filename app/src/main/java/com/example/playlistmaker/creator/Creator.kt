@@ -18,8 +18,12 @@ import com.example.playlistmaker.settings.data.repository.SettingsRepositoryImpl
 import com.example.playlistmaker.settings.domain.interactor.ManageThemeInteractor
 import com.example.playlistmaker.settings.domain.interactor.ManageThemeInteractorImpl
 import com.example.playlistmaker.settings.domain.repository.SettingsRepository
-import com.example.playlistmaker.sharing.data.repository.SharingInteractorImpl
+
+import com.example.playlistmaker.sharing.data.repository.SharingRepositoryImpl
+import com.example.playlistmaker.sharing.domain.interactor.SharingInteractorImpl
 import com.example.playlistmaker.sharing.domain.interactor.SharingInteractor
+
+import com.example.playlistmaker.sharing.domain.repository.SharingRepository
 
 
 object Creator {
@@ -83,8 +87,8 @@ object Creator {
         return PlayerInteractorImpl(provideMediaRepository())
     }
 
-
     fun provideSharingInteractor(context: Context): SharingInteractor {
-        return SharingInteractorImpl(context)
+        val sharingRepository: SharingRepository = SharingRepositoryImpl(context)
+        return SharingInteractorImpl(sharingRepository)
     }
 }

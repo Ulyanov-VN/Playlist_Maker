@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
-    tools:context=".MediaActivity">
+    tools:context=".media.ui.MediaActivity">
 
     <RelativeLayout
         android:id="@+id/relativeLayout"

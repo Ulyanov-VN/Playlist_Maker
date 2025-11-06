@@ -15,25 +15,17 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
-import com.example.playlistmaker.creator.Creator
 import com.example.playlistmaker.player.ui.viewmodels.PlayerState
 import com.example.playlistmaker.player.ui.viewmodels.PlayerViewModel
-import com.example.playlistmaker.player.ui.viewmodels.PlayerViewModelFactory
 import com.example.playlistmaker.search.domain.entity.Track
 import com.example.playlistmaker.search.ui.SearchActivity
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class PlayerActivity : AppCompatActivity() {
 
-    private val viewModel: PlayerViewModel by viewModels {
-        PlayerViewModelFactory(
-            Creator.providePlayerInteractor(),
-            Creator.provideFormatTimeInteractor(),
-            Creator.provideGetCountryNameInteractor(),
-            Creator.provideGetCoverArtworkInteractor(),
-            Creator.provideGetReleaseYearInteractor()
-        )
-    }
+    private val viewModel: PlayerViewModel by viewModel()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

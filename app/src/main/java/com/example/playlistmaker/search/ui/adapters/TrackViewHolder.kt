@@ -21,11 +21,11 @@ class TrackViewHolder(
     )
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(track: Track, formatTimeInteractor: FormatTimeInteractor) {
+    fun bind(track: Track, format: (Long?) -> String) {
         with(binding) {
             trackName.text = track.trackName
             artistName.text = track.artistName
-            trackTime.text = formatTimeInteractor.executeForTrack(track.trackTimeMillis)
+            trackTime.text = format(track.trackTimeMillis)
 
             val isDarkTheme =
                 AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES

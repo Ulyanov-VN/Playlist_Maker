@@ -7,10 +7,10 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
 class HistoryRepositoryImpl(
-    private val prefs: SharedPreferences
+    private val prefs: SharedPreferences,
+    private val gson: Gson
 ) : HistoryRepository {
 
-    private val gson = Gson()
     private val type = object : TypeToken<List<Track>>() {}.type
 
     override fun getHistory(): List<Track> {

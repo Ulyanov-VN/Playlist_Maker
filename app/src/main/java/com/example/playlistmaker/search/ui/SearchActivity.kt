@@ -28,14 +28,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.playlistmaker.R
 import com.example.playlistmaker.databinding.ActivitySearchBinding
-import com.example.playlistmaker.creator.Creator
 import com.example.playlistmaker.main.ui.BaseActivity
 import com.example.playlistmaker.player.ui.PlayerActivity
 import com.example.playlistmaker.search.ui.adapters.TrackAdapter
 import com.example.playlistmaker.search.ui.viewmodels.SearchUiState
 import com.example.playlistmaker.search.ui.viewmodels.SearchViewModel
-import com.example.playlistmaker.search.ui.viewmodels.SearchViewModelFactory
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class SearchActivity : BaseActivity() {
 
@@ -50,12 +49,8 @@ class SearchActivity : BaseActivity() {
     private lateinit var contentContainer: FrameLayout
     private lateinit var progressBar: ProgressBar
 
-    private val viewModel: SearchViewModel by viewModels {
-        SearchViewModelFactory(
-            Creator.provideSearchTracksInteractor(),
-            Creator.provideManageSearchHistoryInteractor(this)
-        )
-    }
+    private val viewModel: SearchViewModel by viewModel()
+
 
     private val searchHandler = Handler(Looper.getMainLooper())
     private val searchRunnable = Runnable {
@@ -197,6 +192,7 @@ class SearchActivity : BaseActivity() {
             return
         }
 
+        // HEADER — одна строка “История поиска”
         val headerAdapter = object : RecyclerView.Adapter<TextViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
                 TextViewHolder(layoutInflater.inflate(R.layout.item_history_header, parent, false))
@@ -208,7 +204,10 @@ class SearchActivity : BaseActivity() {
             }
         }
 
-        val tracksAdapter = TrackAdapter(hist) { track ->
+        val tracksAdapter = TrackAdapter(
+            tracks = hist,
+            format = { millis -> viewModel.formatTime(millis) }
+        ) { track ->
             onHistoryItemClick(track)
             openPlayer(track, fromSearch = false)
         }
@@ -222,6 +221,8 @@ class SearchActivity : BaseActivity() {
                             bindHistory()
                         }
                     }
+
+
 
             override fun getItemCount() = 1
 
@@ -237,7 +238,11 @@ class SearchActivity : BaseActivity() {
 
     private fun setupResultsList() {
         recyclerView.layoutManager = LinearLayoutManager(this)
-        trackAdapter = TrackAdapter(emptyList()) { track ->
+        // передаём форматтер времени из VM (функцию), а не Interactor через Creator
+        trackAdapter = TrackAdapter(
+            tracks = emptyList(),
+            format = { millis -> viewModel.formatTime(millis) }
+        ) { track ->
             viewModel.saveTrackToHistory(track)
             openPlayer(track, fromSearch = true)
         }

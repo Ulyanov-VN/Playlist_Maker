@@ -3,6 +3,7 @@ package com.example.playlistmaker.search.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.playlistmaker.media.domain.interactor.ManageSearchHistoryInteractor
+import com.example.playlistmaker.player.domain.interactor.FormatTimeInteractor
 import com.example.playlistmaker.search.domain.entity.Track
 import com.example.playlistmaker.search.domain.interactor.SearchTracksInteractor
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +13,8 @@ import kotlinx.coroutines.launch
 
 class SearchViewModel(
     private val searchTracksInteractor: SearchTracksInteractor,
-    private val manageSearchHistoryInteractor: ManageSearchHistoryInteractor
+    private val manageSearchHistoryInteractor: ManageSearchHistoryInteractor,
+    private val formatTimeInteractor: FormatTimeInteractor
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<SearchUiState>(SearchUiState.Empty)
@@ -53,6 +55,8 @@ class SearchViewModel(
     fun retry() {
         lastTerm?.let { search(it) }
     }
+
+    fun formatTime(millis: Long?): String = formatTimeInteractor.executeForTrack(millis)
 
     fun getLastSearchTerm(): String? = lastTerm
 

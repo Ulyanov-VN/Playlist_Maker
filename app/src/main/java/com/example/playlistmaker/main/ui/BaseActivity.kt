@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatActivity
 import com.example.playlistmaker.R
-import com.example.playlistmaker.creator.Creator
 import com.example.playlistmaker.media.ui.MediaActivity
 import com.example.playlistmaker.search.ui.SearchActivity
 import com.example.playlistmaker.settings.ui.SettingsActivity
@@ -14,12 +13,9 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 abstract class BaseActivity : AppCompatActivity() {
 
     protected var bottomNavigationView: BottomNavigationView? = null
-    protected val manageThemeInteractor by lazy { Creator.provideManageThemeInteractor(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
-        applyTheme()
-
+        // applyTheme() теперь не нужен — тема выставляется в Application
         super.onCreate(savedInstanceState)
         setContentView(getLayoutId())
 
@@ -31,11 +27,6 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     abstract fun getLayoutId(): Int
-
-    protected fun applyTheme() {
-        val isNightMode = manageThemeInteractor.isDarkThemeEnabled()
-        setNightMode(isNightMode)
-    }
 
     protected fun setNightMode(isNightMode: Boolean) {
         AppCompatDelegate.setDefaultNightMode(

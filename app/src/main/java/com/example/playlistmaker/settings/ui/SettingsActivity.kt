@@ -11,22 +11,16 @@ import android.widget.LinearLayout
 import androidx.activity.viewModels
 import androidx.appcompat.widget.SwitchCompat
 import com.example.playlistmaker.R
-import com.example.playlistmaker.creator.Creator
 import com.example.playlistmaker.main.ui.BaseActivity
 import com.example.playlistmaker.settings.ui.viewmodels.SettingsViewModel
-import com.example.playlistmaker.settings.ui.viewmodels.SettingsViewModelFactory
 import com.example.playlistmaker.sharing.domain.interactor.SharingInteractor
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class SettingsActivity : BaseActivity() {
 
     override fun getLayoutId(): Int = R.layout.activity_settings
 
-    private val viewModel: SettingsViewModel by viewModels {
-        SettingsViewModelFactory(
-            Creator.provideManageThemeInteractor(this),
-            Creator.provideSharingInteractor(this)
-        )
-    }
+    private val viewModel: SettingsViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -15,7 +15,6 @@ abstract class BaseActivity : AppCompatActivity() {
     protected var bottomNavigationView: BottomNavigationView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // applyTheme() теперь не нужен — тема выставляется в Application
         super.onCreate(savedInstanceState)
         setContentView(getLayoutId())
 
@@ -34,7 +33,6 @@ abstract class BaseActivity : AppCompatActivity() {
             else AppCompatDelegate.MODE_NIGHT_NO
         )
     }
-
 
     private fun setupBottomNavigation(bnv: BottomNavigationView) {
         bnv.setOnItemSelectedListener { menuItem ->
@@ -68,7 +66,7 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
-    private fun highlightCurrentMenuItem(bnv: BottomNavigationView) {
+    protected fun highlightCurrentMenuItem(bnv: BottomNavigationView) {
         val menu = bnv.menu
         when (this) {
             is SearchActivity -> menu.findItem(R.id.nav_search).isChecked = true
@@ -76,4 +74,5 @@ abstract class BaseActivity : AppCompatActivity() {
             is SettingsActivity -> menu.findItem(R.id.nav_settings).isChecked = true
         }
     }
+
 }

@@ -7,33 +7,50 @@
     android:background="?attr/colorSecondary"
     tools:context=".media.ui.MediaActivity">
 
-    <RelativeLayout
-        android:id="@+id/relativeLayout"
+    <!-- Header - такой же как в SettingsActivity -->
+    <LinearLayout
+        android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
         android:fitsSystemWindows="true"
-        app:layout_constraintBottom_toTopOf="@+id/tabLayout"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:layout_width="match_parent"
+        <!-- Кнопка назад -->
+        <ImageButton
+            android:id="@+id/backButton"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_marginStart="12dp"
-            android:text="@string/media"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="@dimen/text_size" />
-    </RelativeLayout>
+            android:background="?attr/selectableItemBackground"
+            android:contentDescription="@string/icon_description"
+            android:src="@drawable/but"
+            app:tint="?attr/colorControlNormal" />
 
+        <!-- Заголовок -->
+        <TextView
+            android:id="@+id/title"
+            style="@style/TextViewSettings"
+            android:fontFamily="@font/ys_display_medium"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="@string/media"
+            android:textFontWeight="500"
+            android:textSize="@dimen/text_size" />
+    </LinearLayout>
+
+    <!-- TabLayout -->
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
         style="@style/MyTabLayout"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/relativeLayout"
+        app:layout_constraintTop_toBottomOf="@id/header"
         app:tabTextAppearance="@style/MyTabTextAppearance">
-
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
@@ -45,122 +62,18 @@
             android:layout_height="wrap_content"
             android:text="@string/Playlists" />
 
+
     </com.google.android.material.tabs.TabLayout>
 
-    <!-- Контейнер для вкладки "Треки" -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/tracksTab"
+    <!-- ViewPager2 для фрагментов -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@id/bottomNav"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tabLayout">
-
-        <ImageView
-            android:id="@+id/iconSmile"
-            style="@style/ImageViewSmile"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-
-            app:layout_constraintBottom_toTopOf="@id/tracksEmptyText"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_chainStyle="packed" />
-
-        <TextView
-            android:id="@+id/tracksEmptyText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/text_favorite_tracks"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/iconSmile" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/tracksRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <FrameLayout
-            android:id="@+id/mainContent"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="7dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <!-- Контейнер для вкладки "Плейлисты" -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/playlistsTab"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:paddingTop="8dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/bottomNav"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tabLayout">
-
-        <Button
-            android:id="@+id/createPlaylistButton"
-            style="@style/ButtonNewPlaylist"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/new_playlist"
-
-
-            app:layout_constraintBottom_toTopOf="@id/iconSmile2"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_chainStyle="packed" />
-        <!--app:strokeColor="?attr/colorOnSurface"
-                    app:backgroundTint="@android:color/transparent"-->
-
-
-        <ImageView
-            android:id="@+id/iconSmile2"
-            style="@style/ImageViewSmile"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-
-            app:layout_constraintBottom_toTopOf="@id/playlistsEmptyText"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/createPlaylistButton"
-            app:layout_constraintVertical_chainStyle="packed" />
-
-        <TextView
-            android:id="@+id/playlistsEmptyText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/text_playlist"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/iconSmile2" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/playlistsRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        app:layout_constraintTop_toBottomOf="@id/tabLayout" />
 
     <View
         android:layout_width="match_parent"
@@ -168,6 +81,7 @@
         android:background="@color/grey"
         app:layout_constraintBottom_toTopOf="@id/bottomNav" />
 
+    <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
         style="@style/BottomNavigation"
@@ -176,8 +90,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:menu="@menu/bottom_nav_menu" />
 
-
 </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-

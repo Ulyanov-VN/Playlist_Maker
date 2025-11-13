@@ -1,8 +1,10 @@
 package com.example.playlistmaker.di
 
-import com.example.playlistmaker.player.ui.viewmodels.PlayerViewModel
+import com.example.playlistmaker.media.ui.viewmodels.FavoriteTracksViewModel
+import com.example.playlistmaker.media.ui.viewmodels.PlaylistsViewModel
 import com.example.playlistmaker.search.ui.viewmodels.SearchViewModel
 import com.example.playlistmaker.settings.ui.viewmodels.SettingsViewModel
+import com.example.playlistmaker.player.ui.viewmodels.PlayerViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -12,7 +14,6 @@ val viewModelModule = module {
         SearchViewModel(
             searchTracksInteractor = get(),
             manageSearchHistoryInteractor = get(),
-            // добавили форматтер, чтобы Activity не тянула зависимости:
             formatTimeInteractor = get()
         )
     }
@@ -33,4 +34,8 @@ val viewModelModule = module {
             sharingInteractor = get()
         )
     }
+
+    // Новые ViewModel для медиатеки
+    viewModel { PlaylistsViewModel() }
+    viewModel { FavoriteTracksViewModel() }
 }

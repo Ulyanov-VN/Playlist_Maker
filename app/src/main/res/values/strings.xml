@@ -12,7 +12,8 @@
     <string name="favorite_tracks">Избранные треки</string>
     <string name="Playlists">Плейлисты</string>
     <string name="text_favorite_tracks">Ваша медиатека пуста</string>
-    <string name="text_playlist">Вы не создали ни одного плейлиста</string>
+    <string name="text_playlist">Вы не создали \nни одного плейлиста</string>
+    <string name="text_playlist2">Вы не создали ни одного плейлиста</string>
     <string name="new_playlist">Новый плейлист</string>
     <string name="share_app_text">Посмотрите этот курс по Android-разработке в Практикуме: https://practicum.yandex.ru/android-developer/</string>
     <string name="share_app_title">Поделиться приложением</string>

@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
     android:orientation="vertical"
-    tools:context=".settings.ui.SettingsActivity">
+    tools:context=".settings.ui.SettingsFragment">
 
 
     <!-- Головешка -->
@@ -18,15 +18,15 @@
         android:orientation="horizontal"
         android:fitsSystemWindows="true">
 
-        <!-- Кнопка -->
-        <ImageButton
-            android:id="@+id/icon_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
-            android:contentDescription="@string/icon_description"
-            android:src="@drawable/but"
-            app:tint="?attr/colorControlNormal" />
+<!--        &lt;!&ndash; Кнопка &ndash;&gt;-->
+<!--        <ImageButton-->
+<!--            android:id="@+id/icon_button"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:background="?attr/selectableItemBackground"-->
+<!--            android:contentDescription="@string/icon_description"-->
+<!--            android:src="@drawable/but"-->
+<!--            app:tint="?attr/colorControlNormal" />-->
 
         <!-- Имя страницы -->
         <TextView
@@ -149,161 +149,10 @@
             android:src="@drawable/arrow" />
     </LinearLayout>
 
+
+
 </RelativeLayout>
 
-
-
-<!--<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/settings"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?attr/colorSecondary"
-    android:orientation="vertical"
-    tools:context=".SettingsActivity">
-
-
-    &lt;!&ndash; Головешка &ndash;&gt;
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:fitsSystemWindows="true">
-
-        &lt;!&ndash; Кнопка &ndash;&gt;
-        <ImageButton
-            android:id="@+id/icon_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
-            android:contentDescription="@string/icon_description"
-            android:src="@drawable/but"
-            app:tint="?attr/colorControlNormal" />
-
-        &lt;!&ndash; Имя страницы &ndash;&gt;
-        <TextView
-            style="@style/TextViewSettings"
-            android:fontFamily="@font/ys_display_medium"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:text="@string/settings"
-            android:textFontWeight="500"
-            android:textSize="@dimen/text_size" />
-    </LinearLayout>
-
-    &lt;!&ndash; Темная тема &ndash;&gt;
-    <LinearLayout
-        android:id="@+id/line_dark_theme"
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:layout_marginTop="16dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="0dp"> &lt;!&ndash; Убрали paddingEnd &ndash;&gt;
-
-        <TextView
-            style="@style/TextViewSettings"
-            android:fontFamily="@font/ys_display_regular"
-            android:text="@string/dark_theme"
-            android:textFontWeight="400"
-            android:textSize="@dimen/settings_text_size" />
-
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/themeSwitch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:minWidth="48dp"
-            android:minHeight="48dp"
-            android:textColor="?android:attr/textColorPrimary"
-            app:trackTint="@color/switch_track"
-            app:thumbTint="@color/switch_thumb" />
-    </LinearLayout>
-
-
-    &lt;!&ndash; Расшарить приложение &ndash;&gt;
-    <LinearLayout
-        android:id="@+id/line_share_app"
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:layout_marginTop="16dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:text="@string/share_app_title">
-
-
-        <TextView
-            style="@style/TextViewSettings"
-            android:fontFamily="@font/ys_display_regular"
-            android:text="@string/share_app"
-            android:textFontWeight="400"
-            android:textSize="@dimen/settings_text_size" />
-
-        <ImageView
-            style="@style/ImageViewSettings"
-            android:layout_marginStart="8dp"
-            android:contentDescription="@null"
-            android:src="@drawable/share" />
-    </LinearLayout>
-
-    &lt;!&ndash; Поддержка &ndash;&gt;
-    <LinearLayout
-        android:id="@+id/line_support"
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:layout_marginTop="16dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
-
-        <TextView
-            style="@style/TextViewSettings"
-            android:fontFamily="@font/ys_display_regular"
-            android:text="@string/wr_support"
-            android:textFontWeight="400"
-            android:textSize="@dimen/settings_text_size" />
-
-        <ImageView
-            style="@style/ImageViewSettings"
-            android:layout_marginStart="8dp"
-            android:contentDescription="@null"
-            android:src="@drawable/support" />
-    </LinearLayout>
-
-    &lt;!&ndash; То, что никто и никогда не читает &ndash;&gt;
-    <LinearLayout
-        android:id="@+id/line_arrow"
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:layout_marginTop="16dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
-
-        <TextView
-            style="@style/TextViewSettings"
-            android:fontFamily="@font/ys_display_regular"
-            android:text="@string/user_agreement"
-            android:textFontWeight="400"
-            android:textSize="@dimen/settings_text_size" />
-
-        <ImageView
-            style="@style/ImageViewSettings"
-            android:layout_marginStart="8dp"
-            android:contentDescription="@null"
-            android:src="@drawable/arrow" />
-    </LinearLayout>
-
-</LinearLayout>-->
 
 
 

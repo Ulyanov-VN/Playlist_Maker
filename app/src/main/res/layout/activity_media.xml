@@ -26,6 +26,8 @@
             android:fontFamily="@font/ys_display_medium"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="16dp"
             android:text="@string/media"
             android:textFontWeight="500"
             android:textSize="@dimen/text_size" />

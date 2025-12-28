@@ -27,6 +27,11 @@ class MediaRepositoryImpl : MediaRepository {
                     callbacks.onPrepared()
                 }
                 setOnCompletionListener {
+                    try {
+                        seekTo(0)
+                    } catch (e: Exception) {
+                        Log.e("MediaRepository", "Error seekTo(0) on completion", e)
+                    }
                     callbacks.onCompletion()
                 }
                 setOnErrorListener { _, what, extra ->
@@ -58,6 +63,10 @@ class MediaRepositoryImpl : MediaRepository {
         mediaPlayer = null
         isPrepared = false
         callbacks = null
+    }
+
+    override fun seekTo(positionMs: Int) {
+        mediaPlayer?.seekTo(positionMs)
     }
 
     override fun getCurrentPosition(): Int = mediaPlayer?.currentPosition ?: 0

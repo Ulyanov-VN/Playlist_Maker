@@ -2,11 +2,18 @@ package com.example.playlistmaker.player.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.playlistmaker.player.domain.interactor.*
+import com.example.playlistmaker.player.domain.interactor.FormatTimeInteractor
+import com.example.playlistmaker.player.domain.interactor.GetCountryNameInteractor
+import com.example.playlistmaker.player.domain.interactor.GetCoverArtworkInteractor
+import com.example.playlistmaker.player.domain.interactor.GetReleaseYearInteractor
+import com.example.playlistmaker.player.domain.interactor.PlayerInteractor
 import com.example.playlistmaker.search.domain.entity.Track
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class PlayerViewModel(
@@ -27,32 +34,38 @@ class PlayerViewModel(
 
     private var currentTrack: Track? = null
 
+    private var progressJob: Job? = null
+    private var wasCompleted: Boolean = false
+
+    companion object {
+        private const val PROGRESS_UPDATE_DELAY_MS = 300L
+    }
+
     fun initialize(track: Track) {
         currentTrack = track
 
         playerInteractor.setOnPreparedListener {
+            wasCompleted = false
             val duration = track.trackTimeMillis?.let { formatTimeInteractor.executeForTrack(it) } ?: "--:--"
             _state.value = PlayerState.Prepared(duration)
         }
 
         playerInteractor.setOnCompletionListener {
-            _state.value = PlayerState.Stopped
+            stopProgressUpdates()
+            wasCompleted = true
+
+            // Сброс позиции и UI таймера в 00:00
+            playerInteractor.seekTo(0)
+            _state.value = PlayerState.Paused(0)
         }
 
         playerInteractor.setOnErrorListener { errorMessage ->
+            stopProgressUpdates()
+            wasCompleted = false
             _state.value = PlayerState.Error(errorMessage)
         }
 
         playerInteractor.initialize(track)
-
-        viewModelScope.launch {
-            while (true) {
-                if (playerInteractor.isPlaying()) {
-                    _state.value = PlayerState.Playing(playerInteractor.getCurrentPosition())
-                }
-                kotlinx.coroutines.delay(500) // Update every 500ms
-            }
-        }
     }
 
     fun togglePlayPause() {
@@ -66,18 +79,45 @@ class PlayerViewModel(
     }
 
     fun startPlayback() {
+        // Если трек закончился — стартуем строго с 00:00, без "вспышки" старого времени
+        if (wasCompleted) {
+            playerInteractor.seekTo(0)
+            _state.value = PlayerState.Playing(0)
+            wasCompleted = false
+        } else {
+            _state.value = PlayerState.Playing(playerInteractor.getCurrentPosition())
+        }
+
         playerInteractor.play()
-        _state.value = PlayerState.Playing(playerInteractor.getCurrentPosition())
+        startProgressUpdates()
     }
 
     fun pausePlayback() {
         playerInteractor.pause()
+        stopProgressUpdates()
         _state.value = PlayerState.Paused(playerInteractor.getCurrentPosition())
     }
 
     fun releasePlayer() {
+        stopProgressUpdates()
         playerInteractor.release()
+        wasCompleted = false
         _state.value = PlayerState.Stopped
+    }
+
+    private fun startProgressUpdates() {
+        progressJob?.cancel()
+        progressJob = viewModelScope.launch {
+            while (isActive && playerInteractor.isPlaying()) {
+                _state.value = PlayerState.Playing(playerInteractor.getCurrentPosition())
+                delay(PROGRESS_UPDATE_DELAY_MS)
+            }
+        }
+    }
+
+    private fun stopProgressUpdates() {
+        progressJob?.cancel()
+        progressJob = null
     }
 
     fun toggleFavoriteState() {

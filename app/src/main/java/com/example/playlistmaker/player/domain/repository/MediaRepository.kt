@@ -9,6 +9,7 @@ interface MediaRepository {
     fun getDuration(): Int
     fun isPlaying(): Boolean
     fun isPrepared(): Boolean
+    fun seekTo(positionMs: Int)
 }
 
 interface MediaCallbacks {

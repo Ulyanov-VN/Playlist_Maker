@@ -15,6 +15,8 @@ interface PlayerInteractor {
     fun setOnPreparedListener(listener: () -> Unit)
     fun setOnCompletionListener(listener: () -> Unit)
     fun setOnErrorListener(listener: (String) -> Unit)
+    fun seekTo(positionMs: Int)
+
 }
 
 class PlayerInteractorImpl(
@@ -43,6 +45,10 @@ class PlayerInteractorImpl(
                 onErrorListener?.invoke(errorMessage)
             }
         })
+    }
+
+    override fun seekTo(positionMs: Int) {
+        mediaRepository.seekTo(positionMs)
     }
 
     override fun play() {

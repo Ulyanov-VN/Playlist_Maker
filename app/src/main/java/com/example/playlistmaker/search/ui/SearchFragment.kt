@@ -1,8 +1,6 @@
 package com.example.playlistmaker.search.ui
 
-import android.content.Intent
 import android.content.res.ColorStateList
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -17,28 +15,26 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.playlistmaker.R
 import com.example.playlistmaker.databinding.ActivitySearchBinding
-import com.example.playlistmaker.main.ui.BaseActivity
-import com.example.playlistmaker.player.ui.PlayerActivity
+import com.example.playlistmaker.search.domain.entity.Track
 import com.example.playlistmaker.search.ui.adapters.TrackAdapter
 import com.example.playlistmaker.search.ui.viewmodels.SearchUiState
 import com.example.playlistmaker.search.ui.viewmodels.SearchViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class SearchActivity : BaseActivity() {
-
-    override fun getLayoutId() = R.layout.activity_search
+class SearchFragment : Fragment(R.layout.activity_search) {
 
     private lateinit var binding: ActivitySearchBinding
     private lateinit var searchEditText: EditText
@@ -51,7 +47,6 @@ class SearchActivity : BaseActivity() {
 
     private val viewModel: SearchViewModel by viewModel()
 
-
     private val searchHandler = Handler(Looper.getMainLooper())
     private val searchRunnable = Runnable {
         val query = searchEditText.text.toString()
@@ -63,30 +58,17 @@ class SearchActivity : BaseActivity() {
     private var isClickAllowed = true
     private val clickHandler = Handler(Looper.getMainLooper())
 
-    private val playerLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val data = result.data
-        val fromSearch = data?.getBooleanExtra(EXTRA_FROM_SEARCH, false) ?: false
-        if (fromSearch) {
-            viewModel.getLastSearchTerm()?.let { term ->
-                searchEditText.setText(term)
-                searchEditText.setSelection(term.length)
-            }
-        } else {
-            searchEditText.text?.clear()
-            bindHistory()
-        }
-    }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivitySearchBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        requireActivity().window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN or
+                    WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
+        )
 
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
+        binding = ActivitySearchBinding.bind(view)
 
-        initViews()
+        initViews(view)
         setupSearchField()
         setupResultsList()
 
@@ -95,18 +77,23 @@ class SearchActivity : BaseActivity() {
         observeViewModelState()
     }
 
-    private fun initViews() {
-        searchEditText = findViewById(R.id.searchEditText)
-        clearButton = findViewById(R.id.clearButton)
-        recyclerView = findViewById(R.id.recyclerView)
-        historyRecyclerView = findViewById(R.id.historyRecyclerView)
-        contentContainer = findViewById(R.id.mainContent)
-
-        findViewById<ImageButton>(R.id.icon_button).setOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
+    // 🔥 Вот это добавили
+    override fun onResume() {
+        super.onResume()
+        // Если строка пустая — всегда показываем историю
+        if (this::searchEditText.isInitialized && searchEditText.text.isNullOrEmpty()) {
+            bindHistory()
         }
+    }
 
-        progressBar = ProgressBar(this).apply {
+    private fun initViews(root: View) {
+        searchEditText = root.findViewById(R.id.searchEditText)
+        clearButton = root.findViewById(R.id.clearButton)
+        recyclerView = root.findViewById(R.id.recyclerView)
+        historyRecyclerView = root.findViewById(R.id.historyRecyclerView)
+        contentContainer = root.findViewById(R.id.mainContent)
+
+        progressBar = ProgressBar(requireContext()).apply {
             isIndeterminate = true
             layoutParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -114,14 +101,15 @@ class SearchActivity : BaseActivity() {
             ).apply {
                 gravity = Gravity.CENTER
             }
-            indeterminateTintList = ColorStateList.valueOf(ContextCompat.getColor(this@SearchActivity, R.color.blue))
+            indeterminateTintList =
+                ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.blue))
         }
 
-        historyRecyclerView.layoutManager = LinearLayoutManager(this)
+        historyRecyclerView.layoutManager = LinearLayoutManager(requireContext())
     }
 
     private fun observeViewModelState() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             viewModel.state.collect { state ->
                 historyRecyclerView.visibility = View.GONE
                 recyclerView.visibility = View.GONE
@@ -143,13 +131,12 @@ class SearchActivity : BaseActivity() {
         }
     }
 
-    private fun showSearchResults(tracks: List<com.example.playlistmaker.search.domain.entity.Track>) {
+    private fun showSearchResults(tracks: List<Track>) {
         recyclerView.visibility = View.VISIBLE
         historyRecyclerView.visibility = View.GONE
         trackAdapter.updateTracks(tracks)
         recyclerView.bringToFront()
     }
-
 
     private fun showEmptyView() {
         trackAdapter.updateTracks(emptyList())
@@ -170,19 +157,15 @@ class SearchActivity : BaseActivity() {
         contentContainer.addView(errView)
     }
 
-    private fun openPlayer(track: com.example.playlistmaker.search.domain.entity.Track, fromSearch: Boolean) {
+    private fun openPlayer(track: Track) {
         if (!clickDebounce()) return
 
-        val intent = Intent(this, PlayerActivity::class.java).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                putExtra(PlayerActivity.TRACK_EXTRA, track)
-            } else {
-                @Suppress("DEPRECATION")
-                putExtra(PlayerActivity.TRACK_EXTRA, track)
-            }
-            putExtra(EXTRA_FROM_SEARCH, fromSearch)
-        }
-        playerLauncher.launch(intent)
+        searchHandler.removeCallbacks(searchRunnable)
+        hideKeyboard()
+        searchEditText.clearFocus()
+
+        val bundle = bundleOf("track" to track)
+        findNavController().navigate(R.id.playerFragment, bundle)
     }
 
     private fun bindHistory() {
@@ -192,10 +175,15 @@ class SearchActivity : BaseActivity() {
             return
         }
 
-        // HEADER — одна строка “История поиска”
         val headerAdapter = object : RecyclerView.Adapter<TextViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-                TextViewHolder(layoutInflater.inflate(R.layout.item_history_header, parent, false))
+                TextViewHolder(
+                    layoutInflater.inflate(
+                        R.layout.item_history_header,
+                        parent,
+                        false
+                    )
+                )
 
             override fun getItemCount() = 1
 
@@ -209,20 +197,23 @@ class SearchActivity : BaseActivity() {
             format = { millis -> viewModel.formatTime(millis) }
         ) { track ->
             onHistoryItemClick(track)
-            openPlayer(track, fromSearch = false)
+            openPlayer(track)
         }
 
         val footerAdapter = object : RecyclerView.Adapter<ButtonViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-                ButtonViewHolder(layoutInflater.inflate(R.layout.item_history_footer, parent, false))
-                    .apply {
-                        button.setOnClickListener {
-                            viewModel.clearHistory()
-                            bindHistory()
-                        }
+                ButtonViewHolder(
+                    layoutInflater.inflate(
+                        R.layout.item_history_footer,
+                        parent,
+                        false
+                    )
+                ).apply {
+                    button.setOnClickListener {
+                        viewModel.clearHistory()
+                        bindHistory()
                     }
-
-
+                }
 
             override fun getItemCount() = 1
 
@@ -237,14 +228,13 @@ class SearchActivity : BaseActivity() {
     }
 
     private fun setupResultsList() {
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        // передаём форматтер времени из VM (функцию), а не Interactor через Creator
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
         trackAdapter = TrackAdapter(
             tracks = emptyList(),
             format = { millis -> viewModel.formatTime(millis) }
         ) { track ->
             viewModel.saveTrackToHistory(track)
-            openPlayer(track, fromSearch = true)
+            openPlayer(track)
         }
         recyclerView.adapter = trackAdapter
     }
@@ -320,29 +310,32 @@ class SearchActivity : BaseActivity() {
         return current
     }
 
-    private fun onHistoryItemClick(track: com.example.playlistmaker.search.domain.entity.Track) {
+    private fun onHistoryItemClick(track: Track) {
         viewModel.saveTrackToHistory(track)
-        searchEditText.setText(track.trackName)
-        searchEditText.setSelection(searchEditText.text?.length ?: 0)
-        searchHandler.removeCallbacks(searchRunnable)
-        viewModel.search(track.trackName.orEmpty())
     }
 
     private fun showKeyboard() {
         searchEditText.post {
             searchEditText.requestFocus()
-            WindowCompat.getInsetsController(window, searchEditText)?.show(WindowInsetsCompat.Type.ime())
+            WindowCompat.getInsetsController(
+                requireActivity().window,
+                searchEditText
+            )?.show(WindowInsetsCompat.Type.ime())
         }
     }
 
     private fun hideKeyboard() {
-        WindowCompat.getInsetsController(window, searchEditText)?.hide(WindowInsetsCompat.Type.ime())
+        WindowCompat.getInsetsController(
+            requireActivity().window,
+            searchEditText
+        )?.hide(WindowInsetsCompat.Type.ime())
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        super.onDestroyView()
         searchHandler.removeCallbacks(searchRunnable)
         clickHandler.removeCallbacksAndMessages(null)
+        isClickAllowed = true
     }
 
     private class TextViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -354,7 +347,6 @@ class SearchActivity : BaseActivity() {
     }
 
     companion object {
-        const val EXTRA_FROM_SEARCH = "from_search"
         private const val SEARCH_DEBOUNCE_DELAY = 2000L
         private const val CLICK_DEBOUNCE_DELAY = 1000L
     }

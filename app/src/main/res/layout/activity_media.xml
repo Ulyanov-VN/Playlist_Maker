@@ -5,9 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
-    tools:context=".media.ui.MediaActivity">
+    tools:context=".media.ui.MediaFragment">
 
-    <!-- Header - такой же как в SettingsActivity -->
+    <!-- Header -->
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="match_parent"
@@ -19,23 +19,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Кнопка назад -->
-        <ImageButton
-            android:id="@+id/backButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
-            android:contentDescription="@string/icon_description"
-            android:src="@drawable/but"
-            app:tint="?attr/colorControlNormal" />
-
-        <!-- Заголовок -->
+        <!-- Только заголовок, без кнопки назад -->
         <TextView
             android:id="@+id/title"
             style="@style/TextViewSettings"
             android:fontFamily="@font/ys_display_medium"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="16dp"
             android:text="@string/media"
             android:textFontWeight="500"
             android:textSize="@dimen/text_size" />
@@ -61,33 +53,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/Playlists" />
-
-
     </com.google.android.material.tabs.TabLayout>
 
-    <!-- ViewPager2 для фрагментов -->
+    <!-- ViewPager2 -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/bottomNav"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tabLayout"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tabLayout" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/grey"
-        app:layout_constraintBottom_toTopOf="@id/bottomNav" />
-
-    <!-- Bottom Navigation -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNav"
-        style="@style/BottomNavigation"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_nav_menu" />
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

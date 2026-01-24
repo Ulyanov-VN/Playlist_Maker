@@ -1,9 +1,17 @@
 package com.example.playlistmaker.player.ui.viewmodels
 
-sealed class PlayerState {
-    data object Stopped : PlayerState()
-    data class Playing(val currentPosition: Int) : PlayerState()
-    data class Paused(val currentPosition: Int) : PlayerState()
-    data class Prepared(val trackDuration: String) : PlayerState()
-    data class Error(val message: String) : PlayerState()
+enum class PlayerStatus {
+    STOPPED,
+    PREPARED,
+    PLAYING,
+    PAUSED,
+    ERROR
 }
+
+data class PlayerState(
+    val status: PlayerStatus = PlayerStatus.STOPPED,
+    val currentPosition: Int = 0,         // текущее время трека (мс)
+    val trackDuration: String = "--:--",   // длительность трека строкой
+    val errorMessage: String? = null,      // текст ошибки
+    val isFavorite: Boolean = false        // признак избранного
+)

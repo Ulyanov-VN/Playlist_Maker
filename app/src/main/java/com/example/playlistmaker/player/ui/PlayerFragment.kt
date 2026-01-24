@@ -16,6 +16,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
 import com.example.playlistmaker.player.ui.viewmodels.PlayerState
+import com.example.playlistmaker.player.ui.viewmodels.PlayerStatus
 import com.example.playlistmaker.player.ui.viewmodels.PlayerViewModel
 import com.example.playlistmaker.search.domain.entity.Track
 import kotlinx.coroutines.launch
@@ -52,7 +53,6 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
         setupFavoriteButton(view)
         setupOtherButtons(view)
         observePlayerState(view)
-        observeFavoriteState(view)
     }
 
     private fun setupBackHandling(view: View) {
@@ -76,34 +76,41 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
     private fun observePlayerState(root: View) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.state.collect { state ->
-                when (state) {
-                    is PlayerState.Playing -> {
+
+                // Избранное всегда из общего стейта
+                updateFavoriteButton(root, state.isFavorite)
+
+                when (state.status) {
+                    PlayerStatus.PLAYING -> {
                         updatePlayPauseButton(root, true)
                         updateCurrentTime(root, state.currentPosition)
+                        root.findViewById<ImageButton>(R.id.playPauseButton).isEnabled = true
                     }
-                    is PlayerState.Paused -> {
+
+                    PlayerStatus.PAUSED -> {
                         updatePlayPauseButton(root, false)
                         updateCurrentTime(root, state.currentPosition)
+                        root.findViewById<ImageButton>(R.id.playPauseButton).isEnabled = true
                     }
-                    is PlayerState.Stopped -> {
+
+                    PlayerStatus.STOPPED -> {
                         updatePlayPauseButton(root, false)
-                        root.findViewById<TextView>(R.id.trackDuration).text = "00:00"
+                        // 00:00
+                        updateCurrentTime(root, 0)
+                        root.findViewById<ImageButton>(R.id.playPauseButton).isEnabled = true
                     }
-                    is PlayerState.Prepared -> {
+
+                    PlayerStatus.PREPARED -> {
                         root.findViewById<TextView>(R.id.durationValue).text = state.trackDuration
+                        // текущая позиция при подготовке — 00:00
+                        updateCurrentTime(root, 0)
+                        root.findViewById<ImageButton>(R.id.playPauseButton).isEnabled = true
                     }
-                    is PlayerState.Error -> {
+
+                    PlayerStatus.ERROR -> {
                         root.findViewById<ImageButton>(R.id.playPauseButton).isEnabled = false
                     }
                 }
-            }
-        }
-    }
-
-    private fun observeFavoriteState(root: View) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.isFavorite.collect { isFavorite ->
-                updateFavoriteButton(root, isFavorite)
             }
         }
     }

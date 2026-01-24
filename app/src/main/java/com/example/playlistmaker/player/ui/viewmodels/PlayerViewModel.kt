@@ -23,14 +23,11 @@ class PlayerViewModel(
     private val getCountryNameInteractor: GetCountryNameInteractor,
     private val getCoverArtworkInteractor: GetCoverArtworkInteractor,
     private val getReleaseYearInteractor: GetReleaseYearInteractor,
-    private val favoriteTracksInteractor: FavoriteTracksInteractor  // ДОБАВЛЯЕМ
+    private val favoriteTracksInteractor: FavoriteTracksInteractor
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<PlayerState>(PlayerState.Stopped)
+    private val _state = MutableStateFlow(PlayerState())
     val state: StateFlow<PlayerState> = _state.asStateFlow()
-
-    private val _isFavorite = MutableStateFlow(false)
-    val isFavorite: StateFlow<Boolean> = _isFavorite.asStateFlow()
 
     private var currentTrack: Track? = null
 
@@ -43,25 +40,48 @@ class PlayerViewModel(
 
     fun initialize(track: Track) {
         currentTrack = track
+        wasCompleted = false
+
+        // загрузим избранное в общий state
         checkFavoriteStatus(track)
 
         playerInteractor.setOnPreparedListener {
             wasCompleted = false
-            val duration = track.trackTimeMillis?.let { formatTimeInteractor.executeForTrack(it) } ?: "--:--"
-            _state.value = PlayerState.Prepared(duration)
+
+            val duration = track.trackTimeMillis
+                ?.let { formatTimeInteractor.executeForTrack(it) }
+                ?: "--:--"
+
+            _state.value = _state.value.copy(
+                status = PlayerStatus.PREPARED,
+                trackDuration = duration,
+                currentPosition = 0,
+                errorMessage = null
+            )
         }
 
         playerInteractor.setOnCompletionListener {
             stopProgressUpdates()
             wasCompleted = true
+
+            // Требование: после завершения прогресс = 00:00
             playerInteractor.seekTo(0)
-            _state.value = PlayerState.Paused(0)
+
+            _state.value = _state.value.copy(
+                status = PlayerStatus.PAUSED,   // UI показывает "на паузе" на 00:00
+                currentPosition = 0,
+                errorMessage = null
+            )
         }
 
         playerInteractor.setOnErrorListener { errorMessage ->
             stopProgressUpdates()
             wasCompleted = false
-            _state.value = PlayerState.Error(errorMessage)
+
+            _state.value = _state.value.copy(
+                status = PlayerStatus.ERROR,
+                errorMessage = errorMessage
+            )
         }
 
         playerInteractor.initialize(track)
@@ -69,20 +89,21 @@ class PlayerViewModel(
 
     private fun checkFavoriteStatus(track: Track) {
         viewModelScope.launch {
-            val isFavoriteTrack = favoriteTracksInteractor.checkIsFavorite(track)
-            _isFavorite.value = isFavoriteTrack
+            val fav = favoriteTracksInteractor.checkIsFavorite(track)
+            _state.value = _state.value.copy(isFavorite = fav)
         }
     }
 
     fun onFavoriteClicked() {
         viewModelScope.launch {
-            currentTrack?.let { track ->
-                if (_isFavorite.value) {
-                    favoriteTracksInteractor.removeFromFavorites(track)
-                } else {
-                    favoriteTracksInteractor.addToFavorites(track)
-                }
-                _isFavorite.value = !_isFavorite.value
+            val track = currentTrack ?: return@launch
+
+            if (_state.value.isFavorite) {
+                favoriteTracksInteractor.removeFromFavorites(track)
+                _state.value = _state.value.copy(isFavorite = false)
+            } else {
+                favoriteTracksInteractor.addToFavorites(track)
+                _state.value = _state.value.copy(isFavorite = true)
             }
         }
     }
@@ -98,12 +119,22 @@ class PlayerViewModel(
     }
 
     fun startPlayback() {
+        // если трек завершился — стартуем строго с 00:00 без вспышек старого времени
         if (wasCompleted) {
             playerInteractor.seekTo(0)
-            _state.value = PlayerState.Playing(0)
             wasCompleted = false
+
+            _state.value = _state.value.copy(
+                status = PlayerStatus.PLAYING,
+                currentPosition = 0,
+                errorMessage = null
+            )
         } else {
-            _state.value = PlayerState.Playing(playerInteractor.getCurrentPosition())
+            _state.value = _state.value.copy(
+                status = PlayerStatus.PLAYING,
+                currentPosition = playerInteractor.getCurrentPosition(),
+                errorMessage = null
+            )
         }
 
         playerInteractor.play()
@@ -113,21 +144,34 @@ class PlayerViewModel(
     fun pausePlayback() {
         playerInteractor.pause()
         stopProgressUpdates()
-        _state.value = PlayerState.Paused(playerInteractor.getCurrentPosition())
+
+        _state.value = _state.value.copy(
+            status = PlayerStatus.PAUSED,
+            currentPosition = playerInteractor.getCurrentPosition(),
+            errorMessage = null
+        )
     }
 
     fun releasePlayer() {
         stopProgressUpdates()
         playerInteractor.release()
         wasCompleted = false
-        _state.value = PlayerState.Stopped
+
+        _state.value = _state.value.copy(
+            status = PlayerStatus.STOPPED,
+            currentPosition = 0,
+            errorMessage = null
+        )
     }
 
     private fun startProgressUpdates() {
         progressJob?.cancel()
         progressJob = viewModelScope.launch {
             while (isActive && playerInteractor.isPlaying()) {
-                _state.value = PlayerState.Playing(playerInteractor.getCurrentPosition())
+                _state.value = _state.value.copy(
+                    status = PlayerStatus.PLAYING,
+                    currentPosition = playerInteractor.getCurrentPosition()
+                )
                 delay(PROGRESS_UPDATE_DELAY_MS)
             }
         }
@@ -136,6 +180,11 @@ class PlayerViewModel(
     private fun stopProgressUpdates() {
         progressJob?.cancel()
         progressJob = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        progressJob?.cancel()
     }
 
     fun formatTime(millis: Long): String = formatTimeInteractor.execute(millis)

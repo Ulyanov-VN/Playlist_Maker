@@ -6,9 +6,10 @@ import com.example.playlistmaker.media.domain.interactor.ManageSearchHistoryInte
 import com.example.playlistmaker.player.domain.interactor.FormatTimeInteractor
 import com.example.playlistmaker.search.domain.entity.Track
 import com.example.playlistmaker.search.domain.interactor.SearchTracksInteractor
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class SearchViewModel(
@@ -17,26 +18,31 @@ class SearchViewModel(
     private val formatTimeInteractor: FormatTimeInteractor
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<SearchUiState>(SearchUiState.Empty)
-    val state: StateFlow<SearchUiState> = _state.asStateFlow()
+    private val _state = kotlinx.coroutines.flow.MutableStateFlow<SearchUiState>(SearchUiState.Empty)
+    val state: kotlinx.coroutines.flow.StateFlow<SearchUiState> = _state.asStateFlow()
 
     private var lastTerm: String? = null
+    private var searchJob: Job? = null
 
     fun search(term: String) {
         if (term.isBlank()) return
 
         lastTerm = term
-        viewModelScope.launch {
+
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
             _state.value = SearchUiState.Loading
-            try {
-                val tracks = searchTracksInteractor.execute(term)
-                _state.value = when {
-                    tracks.isNotEmpty() -> SearchUiState.Success(tracks)
-                    else -> SearchUiState.NoResults
+
+            searchTracksInteractor.execute(term)
+                .catch {
+                    _state.value = SearchUiState.Error
                 }
-            } catch (e: Exception) {
-                _state.value = SearchUiState.Error
-            }
+                .collect { tracks ->
+                    _state.value = when {
+                        tracks.isNotEmpty() -> SearchUiState.Success(tracks)
+                        else -> SearchUiState.NoResults
+                    }
+                }
         }
     }
 
@@ -62,6 +68,12 @@ class SearchViewModel(
 
     fun clearState() {
         lastTerm = null
+        searchJob?.cancel()
         _state.value = SearchUiState.Empty
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        searchJob?.cancel()
     }
 }

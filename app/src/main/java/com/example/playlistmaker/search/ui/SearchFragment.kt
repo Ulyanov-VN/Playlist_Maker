@@ -2,19 +2,12 @@ package com.example.playlistmaker.search.ui
 
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
-import android.widget.Button
-import android.widget.EditText
-import android.widget.FrameLayout
-import android.widget.ImageButton
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.WindowCompat
@@ -31,6 +24,8 @@ import com.example.playlistmaker.search.domain.entity.Track
 import com.example.playlistmaker.search.ui.adapters.TrackAdapter
 import com.example.playlistmaker.search.ui.viewmodels.SearchUiState
 import com.example.playlistmaker.search.ui.viewmodels.SearchViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -47,16 +42,9 @@ class SearchFragment : Fragment(R.layout.activity_search) {
 
     private val viewModel: SearchViewModel by viewModel()
 
-    private val searchHandler = Handler(Looper.getMainLooper())
-    private val searchRunnable = Runnable {
-        val query = searchEditText.text.toString()
-        if (query.isNotEmpty()) {
-            viewModel.search(query)
-        }
-    }
-
+    private var searchJob: Job? = null
+    private var clickJob: Job? = null
     private var isClickAllowed = true
-    private val clickHandler = Handler(Looper.getMainLooper())
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -77,10 +65,8 @@ class SearchFragment : Fragment(R.layout.activity_search) {
         observeViewModelState()
     }
 
-    // 🔥 Вот это добавили
     override fun onResume() {
         super.onResume()
-        // Если строка пустая — всегда показываем историю
         if (this::searchEditText.isInitialized && searchEditText.text.isNullOrEmpty()) {
             bindHistory()
         }
@@ -98,9 +84,7 @@ class SearchFragment : Fragment(R.layout.activity_search) {
             layoutParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER
-            }
+            ).apply { gravity = Gravity.CENTER }
             indeterminateTintList =
                 ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.blue))
         }
@@ -140,17 +124,13 @@ class SearchFragment : Fragment(R.layout.activity_search) {
 
     private fun showEmptyView() {
         trackAdapter.updateTracks(emptyList())
-        val emptyView = layoutInflater.inflate(
-            R.layout.placeholder_empty, contentContainer, false
-        )
+        val emptyView = layoutInflater.inflate(R.layout.placeholder_empty, contentContainer, false)
         contentContainer.addView(emptyView)
     }
 
     private fun showErrorView() {
         trackAdapter.updateTracks(emptyList())
-        val errView = layoutInflater.inflate(
-            R.layout.placeholder_error, contentContainer, false
-        )
+        val errView = layoutInflater.inflate(R.layout.placeholder_error, contentContainer, false)
         errView.findViewById<Button>(R.id.btnRetry).setOnClickListener {
             viewModel.retry()
         }
@@ -160,12 +140,24 @@ class SearchFragment : Fragment(R.layout.activity_search) {
     private fun openPlayer(track: Track) {
         if (!clickDebounce()) return
 
-        searchHandler.removeCallbacks(searchRunnable)
+        // отменяем отложенный поиск (аналог removeCallbacks)
+        searchJob?.cancel()
+
         hideKeyboard()
         searchEditText.clearFocus()
 
         val bundle = bundleOf("track" to track)
         findNavController().navigate(R.id.playerFragment, bundle)
+    }
+
+    private fun scheduleSearchDebounced(query: String) {
+        searchJob?.cancel()
+        searchJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(SEARCH_DEBOUNCE_DELAY)
+            if (query.isNotEmpty()) {
+                viewModel.search(query)
+            }
+        }
     }
 
     private fun bindHistory() {
@@ -177,13 +169,7 @@ class SearchFragment : Fragment(R.layout.activity_search) {
 
         val headerAdapter = object : RecyclerView.Adapter<TextViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-                TextViewHolder(
-                    layoutInflater.inflate(
-                        R.layout.item_history_header,
-                        parent,
-                        false
-                    )
-                )
+                TextViewHolder(layoutInflater.inflate(R.layout.item_history_header, parent, false))
 
             override fun getItemCount() = 1
 
@@ -202,13 +188,7 @@ class SearchFragment : Fragment(R.layout.activity_search) {
 
         val footerAdapter = object : RecyclerView.Adapter<ButtonViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-                ButtonViewHolder(
-                    layoutInflater.inflate(
-                        R.layout.item_history_footer,
-                        parent,
-                        false
-                    )
-                ).apply {
+                ButtonViewHolder(layoutInflater.inflate(R.layout.item_history_footer, parent, false)).apply {
                     button.setOnClickListener {
                         viewModel.clearHistory()
                         bindHistory()
@@ -216,7 +196,6 @@ class SearchFragment : Fragment(R.layout.activity_search) {
                 }
 
             override fun getItemCount() = 1
-
             override fun onBindViewHolder(holder: ButtonViewHolder, position: Int) {}
         }
 
@@ -240,9 +219,7 @@ class SearchFragment : Fragment(R.layout.activity_search) {
     }
 
     private fun setupSearchField() {
-        searchEditText.setOnClickListener {
-            showKeyboard()
-        }
+        searchEditText.setOnClickListener { showKeyboard() }
 
         clearButton.setOnClickListener {
             searchEditText.text?.clear()
@@ -251,7 +228,10 @@ class SearchFragment : Fragment(R.layout.activity_search) {
             recyclerView.visibility = View.GONE
             viewModel.clearState()
             trackAdapter.updateTracks(emptyList())
-            searchHandler.removeCallbacks(searchRunnable)
+
+            // отменяем отложенный поиск
+            searchJob?.cancel()
+
             if (searchEditText.hasFocus()) bindHistory()
         }
 
@@ -265,14 +245,13 @@ class SearchFragment : Fragment(R.layout.activity_search) {
                 if (empty && searchEditText.hasFocus()) {
                     bindHistory()
                     recyclerView.visibility = View.GONE
-                    searchHandler.removeCallbacks(searchRunnable)
+                    searchJob?.cancel()
                 } else {
                     historyRecyclerView.visibility = View.GONE
                     recyclerView.visibility = View.VISIBLE
 
                     if (!s.isNullOrEmpty()) {
-                        searchHandler.removeCallbacks(searchRunnable)
-                        searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
+                        scheduleSearchDebounced(s.toString())
                     }
                 }
             }
@@ -284,7 +263,7 @@ class SearchFragment : Fragment(R.layout.activity_search) {
 
         searchEditText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                searchHandler.removeCallbacks(searchRunnable)
+                searchJob?.cancel()
                 viewModel.search(searchEditText.text.toString())
                 hideKeyboard()
                 true
@@ -305,7 +284,11 @@ class SearchFragment : Fragment(R.layout.activity_search) {
         val current = isClickAllowed
         if (isClickAllowed) {
             isClickAllowed = false
-            clickHandler.postDelayed({ isClickAllowed = true }, CLICK_DEBOUNCE_DELAY)
+            clickJob?.cancel()
+            clickJob = viewLifecycleOwner.lifecycleScope.launch {
+                delay(CLICK_DEBOUNCE_DELAY)
+                isClickAllowed = true
+            }
         }
         return current
     }
@@ -317,24 +300,20 @@ class SearchFragment : Fragment(R.layout.activity_search) {
     private fun showKeyboard() {
         searchEditText.post {
             searchEditText.requestFocus()
-            WindowCompat.getInsetsController(
-                requireActivity().window,
-                searchEditText
-            )?.show(WindowInsetsCompat.Type.ime())
+            WindowCompat.getInsetsController(requireActivity().window, searchEditText)
+                ?.show(WindowInsetsCompat.Type.ime())
         }
     }
 
     private fun hideKeyboard() {
-        WindowCompat.getInsetsController(
-            requireActivity().window,
-            searchEditText
-        )?.hide(WindowInsetsCompat.Type.ime())
+        WindowCompat.getInsetsController(requireActivity().window, searchEditText)
+            ?.hide(WindowInsetsCompat.Type.ime())
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        searchHandler.removeCallbacks(searchRunnable)
-        clickHandler.removeCallbacksAndMessages(null)
+        searchJob?.cancel()
+        clickJob?.cancel()
         isClickAllowed = true
     }
 

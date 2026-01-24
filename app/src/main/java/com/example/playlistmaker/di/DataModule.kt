@@ -2,6 +2,7 @@ package com.example.playlistmaker.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.playlistmaker.data.db.AppDatabase
 import com.example.playlistmaker.media.data.repository.HistoryRepositoryImpl
 import com.example.playlistmaker.media.domain.repository.HistoryRepository
 import com.example.playlistmaker.search.data.mapper.TrackMapper
@@ -22,12 +23,20 @@ val dataModule = module {
     // Gson
     single { Gson() }
 
-    // SharedPreferences (два разных файла — квалификаторы)
+    // SharedPreferences
     single<SharedPreferences>(named("history_prefs")) {
         androidContext().getSharedPreferences("search_history_prefs", Context.MODE_PRIVATE)
     }
     single<SharedPreferences>(named("theme_prefs")) {
         androidContext().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+    }
+
+    // Database
+    single {
+        AppDatabase.buildDatabase(androidContext())
+    }
+    single {
+        get<AppDatabase>().favoriteTracksDao()
     }
 
     // Retrofit + iTunes API

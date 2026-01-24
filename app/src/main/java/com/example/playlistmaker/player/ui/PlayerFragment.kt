@@ -49,8 +49,10 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
         setupBackHandling(view)
         bindTrackData(view, track)
         setupPlayPauseButton(view)
+        setupFavoriteButton(view)
         setupOtherButtons(view)
         observePlayerState(view)
+        observeFavoriteState(view)
     }
 
     private fun setupBackHandling(view: View) {
@@ -98,6 +100,14 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
         }
     }
 
+    private fun observeFavoriteState(root: View) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.isFavorite.collect { isFavorite ->
+                updateFavoriteButton(root, isFavorite)
+            }
+        }
+    }
+
     private fun bindTrackData(root: View, track: Track) {
         val artwork = root.findViewById<ImageView>(R.id.albumArt)
         val isDarkTheme = isDarkTheme()
@@ -137,6 +147,12 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
         }
     }
 
+    private fun setupFavoriteButton(root: View) {
+        root.findViewById<ImageButton>(R.id.favoriteButton).setOnClickListener {
+            viewModel.onFavoriteClicked()
+        }
+    }
+
     private fun updatePlayPauseButton(root: View, isPlaying: Boolean) {
         val isDarkTheme = isDarkTheme()
         val playIcon = if (isDarkTheme) R.drawable.play_night else R.drawable.play_day
@@ -156,27 +172,8 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
         val addToPlaylistButton = root.findViewById<ImageButton>(R.id.addToPlaylistButton)
 
         addToPlaylistButton.setOnClickListener {
-            viewModel.togglePlaylistState()
-            updatePlaylistButton(root, viewModel.isInPlaylist)
+            // Здесь будет логика добавления в плейлист
         }
-
-        root.findViewById<ImageButton>(R.id.favoriteButton).setOnClickListener {
-            viewModel.toggleFavoriteState()
-            updateFavoriteButton(root, viewModel.isFavorite)
-        }
-
-        updateFavoriteButton(root, viewModel.isFavorite)
-        updatePlaylistButton(root, viewModel.isInPlaylist)
-    }
-
-    private fun updatePlaylistButton(root: View, isInPlaylist: Boolean) {
-        val addToPlaylistButton = root.findViewById<ImageButton>(R.id.addToPlaylistButton)
-        val iconResId = if (isInPlaylist) {
-            R.drawable.ic_add_to_playlist
-        } else {
-            R.drawable.ic_playlist
-        }
-        addToPlaylistButton.setImageResource(iconResId)
     }
 
     private fun updateFavoriteButton(root: View, isFavorite: Boolean) {

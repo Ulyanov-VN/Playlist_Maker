@@ -14,5 +14,6 @@ data class Track(
     val country: String?,
     val trackTimeMillis: Long?,
     val artworkUrl100: String?,
-    val previewUrl: String?
+    val previewUrl: String?,
+    var isFavorite: Boolean = false
 ) : Parcelable

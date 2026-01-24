@@ -2,6 +2,7 @@ package com.example.playlistmaker.player.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.playlistmaker.favorites.domain.interactor.FavoriteTracksInteractor
 import com.example.playlistmaker.player.domain.interactor.FormatTimeInteractor
 import com.example.playlistmaker.player.domain.interactor.GetCountryNameInteractor
 import com.example.playlistmaker.player.domain.interactor.GetCoverArtworkInteractor
@@ -21,16 +22,15 @@ class PlayerViewModel(
     private val formatTimeInteractor: FormatTimeInteractor,
     private val getCountryNameInteractor: GetCountryNameInteractor,
     private val getCoverArtworkInteractor: GetCoverArtworkInteractor,
-    private val getReleaseYearInteractor: GetReleaseYearInteractor
+    private val getReleaseYearInteractor: GetReleaseYearInteractor,
+    private val favoriteTracksInteractor: FavoriteTracksInteractor  // ДОБАВЛЯЕМ
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<PlayerState>(PlayerState.Stopped)
     val state: StateFlow<PlayerState> = _state.asStateFlow()
 
-    var isFavorite = false
-        private set
-    var isInPlaylist = false
-        private set
+    private val _isFavorite = MutableStateFlow(false)
+    val isFavorite: StateFlow<Boolean> = _isFavorite.asStateFlow()
 
     private var currentTrack: Track? = null
 
@@ -43,6 +43,7 @@ class PlayerViewModel(
 
     fun initialize(track: Track) {
         currentTrack = track
+        checkFavoriteStatus(track)
 
         playerInteractor.setOnPreparedListener {
             wasCompleted = false
@@ -53,8 +54,6 @@ class PlayerViewModel(
         playerInteractor.setOnCompletionListener {
             stopProgressUpdates()
             wasCompleted = true
-
-            // Сброс позиции и UI таймера в 00:00
             playerInteractor.seekTo(0)
             _state.value = PlayerState.Paused(0)
         }
@@ -68,6 +67,26 @@ class PlayerViewModel(
         playerInteractor.initialize(track)
     }
 
+    private fun checkFavoriteStatus(track: Track) {
+        viewModelScope.launch {
+            val isFavoriteTrack = favoriteTracksInteractor.checkIsFavorite(track)
+            _isFavorite.value = isFavoriteTrack
+        }
+    }
+
+    fun onFavoriteClicked() {
+        viewModelScope.launch {
+            currentTrack?.let { track ->
+                if (_isFavorite.value) {
+                    favoriteTracksInteractor.removeFromFavorites(track)
+                } else {
+                    favoriteTracksInteractor.addToFavorites(track)
+                }
+                _isFavorite.value = !_isFavorite.value
+            }
+        }
+    }
+
     fun togglePlayPause() {
         if (!playerInteractor.isPrepared()) return
 
@@ -79,7 +98,6 @@ class PlayerViewModel(
     }
 
     fun startPlayback() {
-        // Если трек закончился — стартуем строго с 00:00, без "вспышки" старого времени
         if (wasCompleted) {
             playerInteractor.seekTo(0)
             _state.value = PlayerState.Playing(0)
@@ -118,14 +136,6 @@ class PlayerViewModel(
     private fun stopProgressUpdates() {
         progressJob?.cancel()
         progressJob = null
-    }
-
-    fun toggleFavoriteState() {
-        isFavorite = !isFavorite
-    }
-
-    fun togglePlaylistState() {
-        isInPlaylist = !isInPlaylist
     }
 
     fun formatTime(millis: Long): String = formatTimeInteractor.execute(millis)

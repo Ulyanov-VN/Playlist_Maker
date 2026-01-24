@@ -1,5 +1,6 @@
 package com.example.playlistmaker.di
 
+import com.example.playlistmaker.favorites.domain.interactor.FavoriteTracksInteractor
 import com.example.playlistmaker.media.ui.viewmodels.FavoriteTracksViewModel
 import com.example.playlistmaker.media.ui.viewmodels.PlaylistsViewModel
 import com.example.playlistmaker.search.ui.viewmodels.SearchViewModel
@@ -24,7 +25,8 @@ val viewModelModule = module {
             formatTimeInteractor = get(),
             getCountryNameInteractor = get(),
             getCoverArtworkInteractor = get(),
-            getReleaseYearInteractor = get()
+            getReleaseYearInteractor = get(),
+            favoriteTracksInteractor = get<FavoriteTracksInteractor>()  // ДОБАВЛЯЕМ
         )
     }
 
@@ -35,7 +37,11 @@ val viewModelModule = module {
         )
     }
 
-    // Новые ViewModel для медиатеки
     viewModel { PlaylistsViewModel() }
-    viewModel { FavoriteTracksViewModel() }
+
+    viewModel {
+        FavoriteTracksViewModel(
+            favoriteTracksInteractor = get()
+        )
+    }
 }

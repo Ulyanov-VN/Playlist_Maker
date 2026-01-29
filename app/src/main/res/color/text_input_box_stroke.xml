@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Цвет когда поле в фокусе -->
+    <item android:color="?attr/hintNewPlaylistColor" android:state_focused="true"/>
+    <!-- Цвет когда поле не в фокусе -->
+    <item android:color="?attr/hintNewPlaylistColor" android:state_focused="false"/>
+
+</selector>

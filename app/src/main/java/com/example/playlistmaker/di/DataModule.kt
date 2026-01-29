@@ -23,6 +23,13 @@ val dataModule = module {
     // Gson
     single { Gson() }
 
+    single {
+        get<AppDatabase>().playlistDao()
+    }
+    single {
+        get<AppDatabase>().playlistTrackDao()
+    }
+
     // SharedPreferences
     single<SharedPreferences>(named("history_prefs")) {
         androidContext().getSharedPreferences("search_history_prefs", Context.MODE_PRIVATE)

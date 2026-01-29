@@ -19,5 +19,13 @@
 
     <color name="ic_player_background_night">#40FFFFFF</color>
     <color name="ic_player_background_day">#401A1B22</color>
+    <!-- Добавьте эти цвета -->
+    <color name="toast_success">#4CAF50</color> <!-- Зеленый для успеха -->
+    <color name="toast_info">#2196F3</color>    <!-- Синий для информации -->
+    <color name="toast_warning">#FF9800</color> <!-- Оранжевый для предупреждения -->
+    <color name="toast_bg_dark">#1A1B22</color>
+    <color name="toast_text_dark">#FFFFFF</color>
 
+    <color name="green">#4CAF50</color>  <!-- Success color -->
+    <color name="orange">#FF9800</color> <!-- Warning color -->
 </resources>

@@ -20,6 +20,11 @@
         <item name="color">@color/text_grey</item>
         <item name="iconBackgroundColor">@color/ic_player_background_day</item>
         <item name="iconForegroundColor">@color/white</item>
+        <item name="PlaylistButtonTextColor">@color/grey</item>
+        <item name="BgToastColor">@color/black</item>
+        <item name="TextToastColor">@color/white</item>
+        <item name="TextNewPlaylistColor">@color/black</item>
+        <item name="hintNewPlaylistColor">@color/text_grey</item>
 
     </style>
 </resources>

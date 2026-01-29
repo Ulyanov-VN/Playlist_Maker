@@ -5,11 +5,17 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/mediaFragment">
 
+    <!-- Существующие фрагменты -->
     <fragment
         android:id="@+id/mediaFragment"
         android:name="com.example.playlistmaker.media.ui.MediaFragment"
         android:label="@string/media"
-        tools:layout="@layout/activity_media" />
+        tools:layout="@layout/activity_media">
+
+        <action
+            android:id="@+id/action_media_to_create_playlist"
+            app:destination="@id/createPlaylistFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/searchFragment"
@@ -27,7 +33,7 @@
         android:id="@+id/playerFragment"
         android:name="com.example.playlistmaker.player.ui.PlayerFragment"
         android:label="@string/media"
-        tools:layout="@layout/activity_player">
+        tools:layout="@layout/fragment_player_with_bottom_sheet">
 
         <action
             android:id="@+id/action_player_to_search"
@@ -36,6 +42,24 @@
         <action
             android:id="@+id/action_player_to_media"
             app:destination="@id/mediaFragment" />
+
+        <action
+            android:id="@+id/action_player_to_create_playlist"
+            app:destination="@id/createPlaylistFragment" />
+    </fragment>
+
+    <!-- Создание плейлиста -->
+    <fragment
+        android:id="@+id/createPlaylistFragment"
+        android:name="com.example.playlistmaker.playlist.ui.fragments.CreatePlaylistFragment"
+        android:label="@string/new_playlist"
+        tools:layout="@layout/fragment_create_playlist">
+
+        <action
+            android:id="@+id/action_create_playlist_to_media"
+            app:destination="@id/mediaFragment"
+            app:popUpTo="@id/mediaFragment"
+            app:popUpToInclusive="false" />
     </fragment>
 
 </navigation>

@@ -26,6 +26,16 @@
     <fragment
         android:id="@+id/playerFragment"
         android:name="com.example.playlistmaker.player.ui.PlayerFragment"
-        tools:layout="@layout/activity_player" />
+        android:label="@string/media"
+        tools:layout="@layout/activity_player">
+
+        <action
+            android:id="@+id/action_player_to_search"
+            app:destination="@id/searchFragment" />
+
+        <action
+            android:id="@+id/action_player_to_media"
+            app:destination="@id/mediaFragment" />
+    </fragment>
 
 </navigation>

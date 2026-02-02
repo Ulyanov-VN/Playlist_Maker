@@ -31,7 +31,7 @@ class MediaFragment : Fragment(R.layout.activity_media) {
 
         title.text = getString(R.string.media)
 
-        val pagerAdapter = MediaPagerAdapter(requireActivity())
+        val pagerAdapter = MediaPagerAdapter(this)
         viewPager.adapter = pagerAdapter
 
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->

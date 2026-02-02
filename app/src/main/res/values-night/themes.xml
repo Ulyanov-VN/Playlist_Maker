@@ -20,6 +20,12 @@
 
         <item name="iconBackgroundColor">@color/ic_player_background_night</item>
         <item name="iconForegroundColor">@color/white</item>
+        <item name="PlaylistButtonTextColor">@color/white</item>
+        <item name="BgToastColor">@color/white</item>
+        <item name="TextToastColor">@color/black</item>
+        <item name="TextNewPlaylistColor">@color/white</item>
+        <item name="hintNewPlaylistColor">@color/white</item>
+
 
     </style>
 

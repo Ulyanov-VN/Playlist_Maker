@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bottomSheetContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+
+    android:background="@drawable/bottom_sheet_background"
+    android:orientation="vertical"
+    app:behavior_hideable="true"
+    app:behavior_peekHeight="0dp"
+    app:behavior_fitToContents="false">
+
+    <!-- Top drag handle -->
+    <View
+        android:id="@+id/dragHandle"
+        android:layout_width="50dp"
+        android:layout_height="4dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="30dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/bottom_sheet_drag_handle" />
+
+    <!-- Заголовок -->
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="28dp"
+        android:gravity="center"
+        android:text="@string/add_to_playlist"
+        android:textColor="?attr/colorControlNormal"
+        android:textSize="19sp"
+        android:fontFamily="@font/ys_display_medium"
+
+
+        />
+
+    <!-- Кнопка "Новый плейлист" -->
+    <Button
+        android:id="@+id/newPlaylistButton"
+        android:backgroundTint="?attr/colorOnBackground"
+        android:strokeColor="?attr/colorOnBackground"
+        android:strokeWidth="1"
+        android:textAllCaps="false"
+        app:cornerRadius="54dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:fontFamily="@font/ys_display_medium"
+        android:text="@string/new_playlist"
+        android:textColor="?attr/colorSecondary"
+        android:textSize="14sp"
+        android:textFontWeight="500"
+        android:letterSpacing="0"
+
+        />
+
+    <!-- Разделитель -->
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="24dp"
+        android:background="#00000000" />
+
+    <!-- RecyclerView для списка плейлистов -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/playlistsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="24dp"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp" />
+
+    <!-- Отступ снизу для безопасной зоны -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="24dp" />
+
+</LinearLayout>

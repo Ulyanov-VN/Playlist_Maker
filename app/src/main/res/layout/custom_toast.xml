@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/toast_layout"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:background="@drawable/toast_background"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:minWidth="345dp"
+    android:maxWidth="48dp">
+
+
+    <!-- Текст сообщения -->
+    <TextView
+        android:id="@+id/toast_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="?attr/TextToastColor"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:fontFamily="@font/ys_display_regular"
+        android:maxLines="2"
+        android:ellipsize="end"
+        />
+
+</LinearLayout>

@@ -55,6 +55,11 @@
         <item name="textAllCaps">false</item>
         <item name="cornerRadius">54dp</item>
         <item name="android:letterSpacing">0</item>
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
     </style>
 
     <style name="NoConnect" parent="Widget.MaterialComponents.Button.OutlinedButton">
@@ -110,8 +115,22 @@
 
     </style>
 
+    <style name="BottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/BottomSheetStyle</item>
+    </style>
 
+    <style name="BottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
 
+    <style name="ShapeAppearanceOverlayCorner2">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">2dp</item>
+    </style>
+    <style name="ShapeAppearanceOverlayCorner3">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
 
 </resources>
 

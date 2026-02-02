@@ -26,7 +26,6 @@
         <item name="TextNewPlaylistColor">@color/white</item>
         <item name="hintNewPlaylistColor">@color/white</item>
 
-
     </style>
 
 

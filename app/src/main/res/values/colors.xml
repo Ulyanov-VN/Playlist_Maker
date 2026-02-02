@@ -28,4 +28,12 @@
 
     <color name="green">#4CAF50</color>  <!-- Success color -->
     <color name="orange">#FF9800</color> <!-- Warning color -->
+
+
+
+    <color name="yp_black">#1A1B22</color>
+    <color name="yp_white">#FFFFFF</color>
+
+    <color name="yp_blue">#3772E7</color>
+    <color name="dialog_scrim">#80000000</color>
 </resources>

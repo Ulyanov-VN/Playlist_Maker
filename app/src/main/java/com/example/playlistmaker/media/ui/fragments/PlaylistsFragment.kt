@@ -53,9 +53,13 @@ class PlaylistsFragment : Fragment() {
         playlistAdapter = PlaylistAdapter(
             playlists = emptyList()
         ) { playlist ->
-            // TODO: Открыть экран плейлиста
-        }
+            val bundle = Bundle().apply {
+                putLong("playlistId", playlist.playlistId) // если поле иначе — замени
+            }
 
+            parentFragment?.findNavController()
+                ?.navigate(R.id.action_media_to_playlistDetails, bundle)
+        }
         val layoutManager = GridLayoutManager(requireContext(), 2)
         binding.playlistsRecyclerView.layoutManager = layoutManager
         binding.playlistsRecyclerView.adapter = playlistAdapter

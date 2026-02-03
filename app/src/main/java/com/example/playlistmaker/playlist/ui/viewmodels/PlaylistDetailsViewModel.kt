@@ -1,11 +1,9 @@
 package com.example.playlistmaker.playlist.ui.viewmodels
 
-import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.playlistmaker.R
 import com.example.playlistmaker.playlist.domain.interactor.PlaylistInteractor
 import com.example.playlistmaker.playlist.domain.model.Playlist
 import com.example.playlistmaker.search.domain.entity.Track
@@ -14,11 +12,8 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class PlaylistDetailsViewModel(
-    private val playlistInteractor: PlaylistInteractor,
-    private val application: Application
+    private val playlistInteractor: PlaylistInteractor
 ) : ViewModel() {
-
-    private val resources = application.resources
 
     private val _state = MutableLiveData<PlaylistDetailsUiState?>()
     val state: LiveData<PlaylistDetailsUiState?> = _state
@@ -50,24 +45,19 @@ class PlaylistDetailsViewModel(
                 for (t in tracks) durationSum += (t.trackTimeMillis ?: 0L)
                 val minutes = SimpleDateFormat("mm", Locale.getDefault()).format(durationSum)
 
-                val minutesText = resources.getQuantityString(R.plurals.minutes_count, minutes.toInt(), minutes.toInt())
-
                 val trackCount = if (playlist.trackCount > 0) playlist.trackCount else playlist.trackIds.size
-
-                val trackCountText = resources.getQuantityString(R.plurals.tracks_count, trackCount, trackCount)
 
                 _state.postValue(
                     PlaylistDetailsUiState(
                         name = playlist.name,
                         description = playlist.description,
                         coverPath = playlist.coverImagePath,
-                        totalMinutesText = minutesText,
-                        trackCountText = trackCountText,
+                        totalMinutesText = "$minutes минут",
+                        trackCountText = formatTrackCount(trackCount),
                         tracks = tracks
                     )
                 )
             } catch (e: Exception) {
-
                 _state.postValue(
                     PlaylistDetailsUiState(
                         name = "Ошибка",
@@ -89,6 +79,7 @@ class PlaylistDetailsViewModel(
         }
     }
 
+    // ✅ Шаг 4: удалить плейлист
     fun deletePlaylist(playlistId: Long) {
         viewModelScope.launch {
             playlistInteractor.deletePlaylist(playlistId)
@@ -96,7 +87,8 @@ class PlaylistDetailsViewModel(
         }
     }
 
-
+    // ✅ Шаг 4: текст для "Поделиться"
+    // Возвращает null если треков нет
     fun buildShareText(): String? {
         val st = _state.value ?: return null
         if (st.tracks.isEmpty()) return null
@@ -109,7 +101,7 @@ class PlaylistDetailsViewModel(
             sb.append(desc).append("\n")
         }
 
-
+        // по ТЗ: именно "[xx] треков"
         sb.append("${st.tracks.size} треков").append("\n")
 
         for (i in st.tracks.indices) {
@@ -128,4 +120,12 @@ class PlaylistDetailsViewModel(
         return SimpleDateFormat("mm:ss", Locale.getDefault()).format(millis)
     }
 
+    private fun formatTrackCount(count: Int): String {
+        return when {
+            count == 0 -> "0 треков"
+            count % 10 == 1 && count % 100 != 11 -> "$count трек"
+            count % 10 in 2..4 && count % 100 !in 12..14 -> "$count трека"
+            else -> "$count треков"
+        }
+    }
 }

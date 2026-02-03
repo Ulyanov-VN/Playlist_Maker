@@ -31,7 +31,7 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist) {
     private lateinit var tracksAdapter: PlaylistTracksAdapter
     private var playlistId: Long = 0L
 
-    //  будем хранить название, чтобы показать его в диалоге удаления
+    // ✅ будем хранить название, чтобы показать его в диалоге удаления
     private var playlistName: String = ""
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -100,10 +100,6 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist) {
         )
         binding.rvTracks.layoutManager = LinearLayoutManager(requireContext())
         binding.rvTracks.adapter = tracksAdapter
-
-
-        binding.rvTracks.visibility = View.GONE
-        binding.tvEmptyTracks.visibility = View.VISIBLE
     }
 
     private fun setupButtons() {
@@ -135,7 +131,7 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist) {
         if (text.isNullOrEmpty()) {
             Toast.makeText(
                 requireContext(),
-                getString(R.string.empty_playlist_share_message),
+                "В этом плейлисте нет списка треков, которым можно поделиться",
                 Toast.LENGTH_SHORT
             ).show()
             return
@@ -158,25 +154,27 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist) {
 
     private fun showDeleteTrackDialog(track: Track) {
         MaterialAlertDialogBuilder(requireContext())
-            .setMessage(getString(R.string.delete_track_message))
-            .setNegativeButton(getString(R.string.no)) { dialog, _ -> dialog.dismiss() }
-            .setPositiveButton(getString(R.string.yes)) { dialog, _ ->
+            .setMessage("Хотите удалить трек?")
+            .setNegativeButton("НЕТ") { dialog, _ -> dialog.dismiss() }
+            .setPositiveButton("ДА") { dialog, _ ->
                 dialog.dismiss()
                 viewModel.deleteTrackFromPlaylist(playlistId, track.trackId)
             }
             .show()
     }
+
     private fun showDeletePlaylistDialog() {
-        val titleForDialog = playlistName.trim().ifEmpty { getString(R.string.playlist_default_name) }
+        val titleForDialog = playlistName.trim().ifEmpty { "плейлист" }
 
         MaterialAlertDialogBuilder(requireContext())
-            .setMessage(getString(R.string.delete_playlist_message, titleForDialog))
-            .setNegativeButton(getString(R.string.no)) { dialog, _ -> dialog.dismiss() }
-            .setPositiveButton(getString(R.string.yes)) { dialog, _ ->
+            .setMessage("Хотите удалить плейлист \"$titleForDialog\"?")
+            .setNegativeButton("Нет") { dialog, _ -> dialog.dismiss() }
+            .setPositiveButton("Да") { dialog, _ ->
                 dialog.dismiss()
                 viewModel.deletePlaylist(playlistId)
             }
             .show()
+
     }
 
     private fun observeDelete() {
@@ -191,7 +189,7 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist) {
         viewModel.state.observe(viewLifecycleOwner) { st ->
             if (st == null) return@observe
 
-            //актуальное название (нужно для диалога удаления)
+            // ✅ запоминаем актуальное название (нужно для диалога удаления)
             playlistName = st.name
 
             binding.tvTitle.text = st.name
@@ -204,8 +202,7 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist) {
                 binding.tvDescription.text = desc
             }
 
-            val minutesText = st.totalMinutesText
-            binding.tvMeta.text = "${minutesText} • ${st.trackCountText}"
+            binding.tvMeta.text = "${st.totalMinutesText} • ${st.trackCountText}"
 
             val placeholder = R.drawable.placeholder_dark
             if (!st.coverPath.isNullOrEmpty()) {
@@ -230,21 +227,9 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist) {
             binding.menuTitle.text = st.name
             binding.menuCount.text = st.trackCountText
 
-            val tracks = st.tracks
-            tracksAdapter.submitList(tracks)
-
-            if (tracks.isNullOrEmpty()) {
-                // Если треков нет - показываем сообщение и скрываем RecyclerView
-                binding.rvTracks.visibility = View.GONE
-                binding.tvEmptyTracks.visibility = View.VISIBLE
-            } else {
-                // Если есть треки - показываем RecyclerView и скрываем сообщение
-                binding.rvTracks.visibility = View.VISIBLE
-                binding.tvEmptyTracks.visibility = View.GONE
-            }
+            tracksAdapter.submitList(st.tracks)
         }
     }
-
 
     override fun onResume() {
         super.onResume()

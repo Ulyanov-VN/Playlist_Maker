@@ -40,13 +40,7 @@ class PlaylistBottomSheetAdapter(
 
         fun bind(playlist: Playlist) {
             binding.playlistName.text = playlist.name
-            val trackCountText = binding.root.context.resources.getQuantityString(
-                R.plurals.tracks_count,
-                playlist.trackCount,
-                playlist.trackCount
-            )
-            binding.trackCount.text = trackCountText
-
+            binding.trackCount.text = formatTrackCount(playlist.trackCount)
 
             // Загрузка обложки
             val isDarkTheme = binding.root.resources.configuration.uiMode and
@@ -74,5 +68,13 @@ class PlaylistBottomSheetAdapter(
             }
         }
 
+        private fun formatTrackCount(count: Int): String {
+            return when {
+                count == 0 -> binding.root.context.getString(R.string.no_tracks)
+                count % 10 == 1 && count % 100 != 11 -> "$count трек"
+                count % 10 in 2..4 && count % 100 !in 12..14 -> "$count трека"
+                else -> "$count треков"
+            }
+        }
     }
 }

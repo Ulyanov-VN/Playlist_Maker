@@ -61,12 +61,11 @@ val viewModelModule = module {
 
     viewModel {
         PlaylistDetailsViewModel(
-            playlistInteractor = get(),
-            application = get()
+            playlistInteractor = get()
         )
     }
 
-
+    // ✅ ВАЖНО: здесь EditPlaylistViewModel должен быть ОДИН раз во всём проекте
     viewModel {
         EditPlaylistViewModel(
             playlistInteractor = get()

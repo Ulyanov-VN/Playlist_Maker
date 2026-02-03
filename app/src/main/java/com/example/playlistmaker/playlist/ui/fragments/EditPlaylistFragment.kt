@@ -39,7 +39,7 @@ class EditPlaylistFragment : Fragment(R.layout.fragment_create_playlist) {
 
         playlistId = requireArguments().getLong("playlistId")
 
-        // тексты под редактирование
+        // ✅ тексты под редактирование
         binding.title.text = getString(R.string.edit_playlist_title)
         binding.createButton.text = getString(R.string.save)
 
@@ -54,7 +54,7 @@ class EditPlaylistFragment : Fragment(R.layout.fragment_create_playlist) {
     private fun setupBack() {
         binding.backButton.setOnClickListener { findNavController().navigateUp() }
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
-            // просто выйти без сохранения
+            // ✅ по ТЗ — просто выйти без сохранения
             findNavController().navigateUp()
         }
     }
@@ -77,7 +77,7 @@ class EditPlaylistFragment : Fragment(R.layout.fragment_create_playlist) {
         })
 
         binding.createButton.setOnClickListener {
-            //сохраняем только кнопкой "Сохранить"
+            // ✅ сохраняем только кнопкой "Сохранить"
             viewModel.save()
         }
     }
@@ -117,7 +117,7 @@ class EditPlaylistFragment : Fragment(R.layout.fragment_create_playlist) {
 
         viewModel.saved.observe(viewLifecycleOwner) { saved ->
             if (saved == true) {
-                // закрываем редактор, возвращаемся на плейлист
+                // ✅ закрываем редактор, возвращаемся на плейлист
                 findNavController().navigateUp()
             }
         }

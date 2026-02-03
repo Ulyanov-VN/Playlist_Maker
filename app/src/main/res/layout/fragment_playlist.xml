@@ -122,7 +122,7 @@
                 android:layout_marginBottom="10dp"
                 android:background="@android:color/darker_gray"/>
 
-            <!-- ✅ ТЕКСТ “НЕТ ТРЕКОВ” ВВЕРХУ BOTTOMSHEET -->
+            <!-- Текст "Нет треков в плейлисте" -->
             <TextView
                 android:id="@+id/tvEmptyTracks"
                 android:layout_width="match_parent"
@@ -132,9 +132,9 @@
                 android:paddingTop="12dp"
                 android:paddingBottom="12dp"
                 android:gravity="center"
-                android:text="В этом плейлисте нет треков"
+                android:text="@string/no_tracks_in_playlist"
                 android:textSize="16sp"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorControlNormal"
                 android:visibility="gone" />
 
             <androidx.recyclerview.widget.RecyclerView
@@ -232,7 +232,7 @@
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:text="Поделиться"
+                android:text="@string/sharing_playlist"
                 android:textColor="?attr/colorOnSurface"/>
 
             <TextView
@@ -242,7 +242,7 @@
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:text="Редактировать информацию"
+                android:text="@string/edit_info_playlist"
                 android:textColor="?attr/colorOnSurface"/>
 
             <TextView
@@ -252,7 +252,7 @@
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:text="Удалить плейлист"
+                android:text="@string/delete_playlist"
                 android:textColor="?attr/colorOnSurface"/>
 
         </LinearLayout>

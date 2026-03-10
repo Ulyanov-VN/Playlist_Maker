@@ -21,6 +21,7 @@ import com.example.playlistmaker.databinding.FragmentPlayerWithBottomSheetBindin
 import com.example.playlistmaker.player.ui.viewmodels.PlayerState
 import com.example.playlistmaker.player.ui.viewmodels.PlayerStatus
 import com.example.playlistmaker.player.ui.viewmodels.PlayerViewModel
+import com.example.playlistmaker.player.ui.views.PlaybackButtonView
 import com.example.playlistmaker.playlist.ui.adapters.PlaylistBottomSheetAdapter
 import com.example.playlistmaker.search.domain.entity.Track
 import com.example.playlistmaker.utils.CustomToast
@@ -36,7 +37,11 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
 
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<View>
     private lateinit var playlistsAdapter: PlaylistBottomSheetAdapter
+    private lateinit var playbackButton: PlaybackButtonView
     private var currentTrack: Track? = null
+
+    // Флаг для отслеживания, нужно ли синхронизировать состояние кнопки
+    private var shouldSyncButtonState = true
 
     // Views from bottom sheet
     private lateinit var bottomSheetContainer: View
@@ -60,6 +65,9 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
 
         _binding = FragmentPlayerWithBottomSheetBinding.bind(view)
 
+        // Инициализация PlaybackButtonView
+        playbackButton = binding.playbackButton
+
         val track: Track? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             arguments?.getParcelable("track", Track::class.java)
         } else {
@@ -77,7 +85,7 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
 
         setupBackHandling()
         bindTrackData(track)
-        setupPlayPauseButton()
+        setupPlaybackButton()
         setupFavoriteButton()
         setupAddToPlaylistButton()
         setupBottomSheet(view)
@@ -116,27 +124,35 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
 
             when (state.status) {
                 PlayerStatus.PLAYING -> {
-                    updatePlayPauseButton(true)
+                    // Синхронизируем кнопку ТОЛЬКО если изменение пришло не от нажатия
+                    if (shouldSyncButtonState) {
+                        playbackButton.setState(PlaybackButtonView.State.PAUSE)
+                    }
                     updateCurrentTime(state.currentPosition)
-                    binding.playPauseButton.isEnabled = true
+                    playbackButton.isEnabled = true
+                    shouldSyncButtonState = true
                 }
                 PlayerStatus.PAUSED -> {
-                    updatePlayPauseButton(false)
+                    if (shouldSyncButtonState) {
+                        playbackButton.setState(PlaybackButtonView.State.PLAY)
+                    }
                     updateCurrentTime(state.currentPosition)
-                    binding.playPauseButton.isEnabled = true
+                    playbackButton.isEnabled = true
+                    shouldSyncButtonState = true
                 }
                 PlayerStatus.STOPPED -> {
-                    updatePlayPauseButton(false)
+                    playbackButton.setState(PlaybackButtonView.State.PLAY)
                     updateCurrentTime(0)
-                    binding.playPauseButton.isEnabled = true
+                    playbackButton.isEnabled = true
                 }
                 PlayerStatus.PREPARED -> {
                     binding.durationValue.text = state.trackDuration
                     updateCurrentTime(0)
-                    binding.playPauseButton.isEnabled = true
+                    playbackButton.setState(PlaybackButtonView.State.PLAY)
+                    playbackButton.isEnabled = true
                 }
                 PlayerStatus.ERROR -> {
-                    binding.playPauseButton.isEnabled = false
+                    playbackButton.isEnabled = false
                 }
             }
         }
@@ -174,9 +190,17 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
         binding.countryValue.text = countryName
     }
 
-    private fun setupPlayPauseButton() {
-        binding.playPauseButton.setOnClickListener {
-            viewModel.togglePlayPause()
+    private fun setupPlaybackButton() {
+        playbackButton.setOnPlaybackClickListener {
+            // Здесь НЕ вызываем togglePlayPause, потому что кнопка уже сменила состояние
+            // Просто передаем команду плееру с текущим состоянием кнопки
+            shouldSyncButtonState = false // Не синхронизировать кнопку при следующем обновлении
+            val isPlaying = playbackButton.getState() == PlaybackButtonView.State.PAUSE
+            if (isPlaying) {
+                viewModel.startPlayback()
+            } else {
+                viewModel.pausePlayback()
+            }
         }
     }
 
@@ -193,7 +217,6 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
                 val playlists = viewModel.playlists.value ?: emptyList()
 
                 if (playlists.isEmpty()) {
-                    // Если плейлистов нет, сразу переходим к созданию
                     findNavController().navigate(R.id.action_player_to_create_playlist)
                 } else {
                     showBottomSheet()
@@ -238,99 +261,78 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetContainer).apply {
             state = BottomSheetBehavior.STATE_HIDDEN
 
-            // Минимальная конфигурация
             isFitToContents = false
             isHideable = true
             skipCollapsed = true
 
-            // Устанавливаем фиксированную высоту
             val layoutParams = bottomSheetContainer.layoutParams
             layoutParams.height = halfScreenHeight
             bottomSheetContainer.layoutParams = layoutParams
 
-            // Peek height = 0, чтобы не показывалось свернутым
             peekHeight = 0
 
             addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
                     when (newState) {
                         BottomSheetBehavior.STATE_HIDDEN -> {
-                            // Если скрываем программно, не делаем ничего (уже сделали в hideBottomSheet)
                             if (!isClosingProgrammatically) {
                                 overlay.visibility = View.GONE
                                 overlay.isClickable = false
-                                // Возвращаем на начальную позицию (за экраном)
                                 bottomSheet.translationY = screenHeight.toFloat()
                             }
                             isClosingProgrammatically = false
                         }
                         BottomSheetBehavior.STATE_EXPANDED -> {
-                            // Если открываем программно, не делаем ничего (уже сделали в showBottomSheet)
                             if (!isOpeningProgrammatically) {
                                 overlay.visibility = View.VISIBLE
                                 overlay.isClickable = true
                                 overlay.alpha = 1f
-                                // Устанавливаем позицию - половина экрана снизу
                                 bottomSheet.translationY = bottomSheetInitialY
                             }
                             isOpeningProgrammatically = false
                         }
                         BottomSheetBehavior.STATE_COLLAPSED -> {
-                            // Не должно происходить
                             state = BottomSheetBehavior.STATE_EXPANDED
                         }
-                        else -> {
-                            // Для других состояний
-                        }
+                        else -> { }
                     }
                 }
 
                 override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                    // Игнорируем стандартные slide события при программном открытии/закрытии
                     if (isClosingProgrammatically || isOpeningProgrammatically) return
 
-                    // Блокируем движение вверх (slideOffset > 0.5)
                     if (slideOffset > 0.5f) {
-                        // Фиксируем на позиции halfScreenHeight
                         bottomSheet.translationY = bottomSheetInitialY
                         return
                     }
 
-                    // Рассчитываем положение для анимации
                     val newY = screenHeight - (slideOffset + 1f) * halfScreenHeight
                     bottomSheet.translationY = newY.coerceAtMost(bottomSheetInitialY)
 
-                    // Плавное изменение прозрачности overlay
-                    val alpha = (slideOffset + 1f) / 2f // От 0.0 до 1.0
+                    val alpha = (slideOffset + 1f) / 2f
                     overlay.alpha = alpha.coerceIn(0f, 1f)
                 }
             })
         }
 
-        // Настройка drag handle для плавного закрытия
         dragHandle.setOnTouchListener { v, event ->
             handleBottomSheetSwipe(event)
         }
 
-        // Настройка свайпа по заголовку
         bottomSheetTitle.setOnTouchListener { v, event ->
             handleBottomSheetSwipe(event)
         }
 
-        // Кнопка "Новый плейлист"
         newPlaylistButton.setOnClickListener {
             hideBottomSheet()
             findNavController().navigate(R.id.action_player_to_create_playlist)
         }
 
-        // Клик по overlay для закрытия
         overlay.setOnClickListener {
             hideBottomSheet()
         }
 
-        // Настройка касания по самому bottom sheet для свайпа
         bottomSheetContainer.setOnTouchListener { v, event ->
-            // Если касание в верхней части bottom sheet, обрабатываем свайп
             if (event.y < 100.dpToPx()) {
                 return@setOnTouchListener handleBottomSheetSwipe(event)
             }
@@ -343,7 +345,6 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
             MotionEvent.ACTION_DOWN -> {
                 startY = event.rawY
                 isDraggingBottomSheet = false
-                // Отменяем текущую анимацию если есть
                 currentAnimator?.cancel()
                 return true
             }
@@ -352,23 +353,18 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
                 val currentY = event.rawY
                 val deltaY = currentY - startY
 
-                // Если начали тянуть вниз и bottom sheet открыт
                 if (deltaY > 20 && !isDraggingBottomSheet &&
                     bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
                     isDraggingBottomSheet = true
                 }
 
-                // Если тянем вниз
                 if (isDraggingBottomSheet && deltaY > 0) {
-                    // Плавно двигаем bottom sheet вниз пропорционально свайпу
                     val maxDrag = 400.dpToPx().toFloat()
                     val progress = deltaY.coerceIn(0f, maxDrag) / maxDrag
 
-                    // Двигаем вниз от начальной позиции
                     val newY = bottomSheetInitialY + deltaY
                     bottomSheetContainer.translationY = newY
 
-                    // Уменьшаем прозрачность overlay
                     overlay.alpha = 1 - progress
                     return true
                 }
@@ -377,12 +373,9 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 val deltaY = event.rawY - startY
 
-                // Если протащили достаточно далеко вниз
                 if (deltaY > 150.dpToPx() || isDraggingBottomSheet) {
-                    // Анимация закрытия
                     hideBottomSheetWithAnimation(deltaY)
                 } else {
-                    // Возвращаем на начальную позицию
                     resetBottomSheetPosition()
                 }
 
@@ -395,13 +388,10 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
     private fun hideBottomSheetWithAnimation(deltaY: Float) {
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
 
-        // Отменяем предыдущую анимацию
         currentAnimator?.cancel()
 
-        // Устанавливаем флаг программного закрытия
         isClosingProgrammatically = true
 
-        // Создаем анимацию для bottom sheet
         val bottomSheetAnimator = ObjectAnimator.ofFloat(
             bottomSheetContainer,
             "translationY",
@@ -412,17 +402,14 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
             interpolator = AccelerateInterpolator()
         }
 
-        // Создаем анимацию для overlay
         val overlayAnimator = ObjectAnimator.ofFloat(overlay, "alpha", overlay.alpha, 0f).apply {
             duration = 250L
             interpolator = AccelerateInterpolator()
         }
 
-        // Комбинируем анимации
         currentAnimator = bottomSheetAnimator
         bottomSheetAnimator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
-                // После анимации меняем состояние BottomSheetBehavior
                 bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
                 currentAnimator = null
             }
@@ -432,16 +419,13 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
             }
         })
 
-        // Запускаем анимации
         bottomSheetAnimator.start()
         overlayAnimator.start()
     }
 
     private fun resetBottomSheetPosition() {
-        // Отменяем текущую анимацию
         currentAnimator?.cancel()
 
-        // Анимация возврата на место
         currentAnimator = ObjectAnimator.ofFloat(
             bottomSheetContainer,
             "translationY",
@@ -475,32 +459,25 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
     private fun showBottomSheet() {
         viewModel.loadPlaylists()
 
-        // Проверяем, не открыт ли уже
         if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_HIDDEN) {
             val displayMetrics = resources.displayMetrics
             val screenHeight = displayMetrics.heightPixels
             val halfScreenHeight = screenHeight / 2
 
-            // Отменяем текущую анимацию
             currentAnimator?.cancel()
 
-            // Устанавливаем флаг программного открытия
             isOpeningProgrammatically = true
 
-            // Устанавливаем высоту
             val layoutParams = bottomSheetContainer.layoutParams
             layoutParams.height = halfScreenHeight
             bottomSheetContainer.layoutParams = layoutParams
 
-            // Обновляем начальную позицию
             bottomSheetInitialY = (screenHeight - halfScreenHeight).toFloat()
 
-            // Показываем overlay сразу с прозрачностью 0
             overlay.visibility = View.VISIBLE
             overlay.isClickable = true
             overlay.alpha = 0f
 
-            // Создаем анимацию появления снизу
             currentAnimator = ObjectAnimator.ofFloat(
                 bottomSheetContainer,
                 "translationY",
@@ -511,7 +488,6 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
                 interpolator = AccelerateInterpolator()
                 addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationStart(animation: Animator) {
-                        // Перед началом анимации устанавливаем состояние EXPANDED
                         bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
                     }
 
@@ -526,7 +502,6 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
                 start()
             }
 
-            // Анимация для overlay
             overlay.animate()
                 .alpha(1f)
                 .setDuration(300L)
@@ -535,15 +510,12 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
     }
 
     private fun hideBottomSheet() {
-        // Отменяем текущую анимацию
         currentAnimator?.cancel()
 
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
 
-        // Устанавливаем флаг программного закрытия
         isClosingProgrammatically = true
 
-        // Создаем плавную анимацию закрытия
         currentAnimator = ObjectAnimator.ofFloat(
             bottomSheetContainer,
             "translationY",
@@ -554,7 +526,6 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
             interpolator = AccelerateInterpolator()
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
-                    // Только после завершения анимации меняем состояние
                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
                     overlay.visibility = View.GONE
                     currentAnimator = null
@@ -567,7 +538,6 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
             start()
         }
 
-        // Анимация для overlay
         overlay.animate()
             .alpha(0f)
             .setDuration(250L)
@@ -578,7 +548,6 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
         viewModel.playlists.observe(viewLifecycleOwner) { playlists ->
             playlistsAdapter.updatePlaylists(playlists)
 
-            // Обновляем UI в зависимости от наличия плейлистов
             if (playlists.isNotEmpty()) {
                 bottomSheetDivider.visibility = View.VISIBLE
                 playlistsRecyclerView.visibility = View.VISIBLE
@@ -632,24 +601,12 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
 
     private fun updateAddToPlaylistButton(isAdded: Boolean) {
         if (isAdded) {
-            // Используем иконку с галочкой (добавлено)
             binding.addToPlaylistButton.setImageResource(R.drawable.ic_add_to_playlist)
         } else {
-            // Используем обычную иконку плейлиста
             val isDarkTheme = isDarkTheme()
             val playlistIcon = if (isDarkTheme) R.drawable.ic_playlist_night else R.drawable.ic_playlist
             binding.addToPlaylistButton.setImageResource(playlistIcon)
         }
-    }
-
-    private fun updatePlayPauseButton(isPlaying: Boolean) {
-        val isDarkTheme = isDarkTheme()
-        val playIcon = if (isDarkTheme) R.drawable.play_night else R.drawable.play_day
-        val pauseIcon = if (isDarkTheme) R.drawable.pause_night else R.drawable.pause_day
-
-        binding.playPauseButton.setImageResource(
-            if (isPlaying) pauseIcon else playIcon
-        )
     }
 
     private fun isDarkTheme(): Boolean {
@@ -675,8 +632,8 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Отменяем все анимации
         currentAnimator?.cancel()
+        playbackButton.release()
         viewModel.releasePlayer()
         _binding = null
     }

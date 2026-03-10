@@ -17,6 +17,5 @@ interface PlaylistRepository {
 
     suspend fun removeTrackFromPlaylist(playlistId: Long, trackId: Long)
 
-    // ✅ Шаг 4: удалить плейлист полностью
     suspend fun deletePlaylist(playlistId: Long)
 }

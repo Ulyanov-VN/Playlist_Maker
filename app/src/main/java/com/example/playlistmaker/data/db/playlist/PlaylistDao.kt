@@ -20,6 +20,10 @@ interface PlaylistDao {
 
     @Query("DELETE FROM playlists WHERE playlistId = :playlistId")
     suspend fun deletePlaylist(playlistId: Long)
+
+    // нужно для чистки "сиротских" треков
+    @Query("SELECT * FROM playlists")
+    suspend fun getAllPlaylistsOnce(): List<PlaylistEntity>
 }
 
 @Dao
@@ -33,4 +37,7 @@ interface PlaylistTrackDao {
 
     @Query("SELECT * FROM playlist_tracks WHERE trackId IN (:trackIds)")
     suspend fun getTracksByIds(trackIds: List<Long>): List<PlaylistTrackEntity>
+
+    @Query("DELETE FROM playlist_tracks WHERE trackId = :trackId")
+    suspend fun deleteTrackById(trackId: Long): Int
 }

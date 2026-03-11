@@ -1,6 +1,7 @@
 package com.example.playlistmaker.player.ui.views
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
@@ -27,6 +28,10 @@ class PlaybackButtonView @JvmOverloads constructor(
     private var playIconResId: Int = 0
     private var pauseIconResId: Int = 0
 
+    // Храним Drawable как поля класса - создаются один раз
+    private var playDrawable: Drawable? = null
+    private var pauseDrawable: Drawable? = null
+
     // Прямоугольник для отрисовки
     private val drawingRect = RectF()
 
@@ -47,10 +52,30 @@ class PlaybackButtonView @JvmOverloads constructor(
                 // Получаем ресурсы изображений
                 playIconResId = getResourceId(R.styleable.PlaybackButtonView_playIcon, 0)
                 pauseIconResId = getResourceId(R.styleable.PlaybackButtonView_pauseIcon, 0)
+
+                // Загружаем Drawable один раз при создании
+                loadDrawables()
             } finally {
                 recycle()
             }
         }
+    }
+
+    private fun loadDrawables() {
+        playDrawable = if (playIconResId != 0) {
+            AppCompatResources.getDrawable(context, playIconResId)
+        } else null
+
+        pauseDrawable = if (pauseIconResId != 0) {
+            AppCompatResources.getDrawable(context, pauseIconResId)
+        } else null
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Перезагружаем Drawable при смене темы
+        loadDrawables()
+        invalidate()
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -60,35 +85,38 @@ class PlaybackButtonView @JvmOverloads constructor(
         val left = (w - size) / 2f
         val top = (h - size) / 2f
         drawingRect.set(left, top, left + size, top + size)
+
+        // Обновляем bounds для Drawable при изменении размера
+        updateDrawableBounds()
+    }
+
+    private fun updateDrawableBounds() {
+        playDrawable?.setBounds(
+            drawingRect.left.toInt(),
+            drawingRect.top.toInt(),
+            drawingRect.right.toInt(),
+            drawingRect.bottom.toInt()
+        )
+        pauseDrawable?.setBounds(
+            drawingRect.left.toInt(),
+            drawingRect.top.toInt(),
+            drawingRect.right.toInt(),
+            drawingRect.bottom.toInt()
+        )
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        // Получаем Drawable с учетом текущей темы
+        // Выбираем нужный Drawable (уже загруженный, с установленными bounds)
         val drawable = when (currentState) {
-            State.PLAY -> getThemeAwareDrawable(playIconResId)
-            State.PAUSE -> getThemeAwareDrawable(pauseIconResId)
+            State.PLAY -> playDrawable
+            State.PAUSE -> pauseDrawable
         }
 
         // Рисуем Drawable
-        drawable?.let {
-            it.setBounds(
-                drawingRect.left.toInt(),
-                drawingRect.top.toInt(),
-                drawingRect.right.toInt(),
-                drawingRect.bottom.toInt()
-            )
-            it.draw(canvas)
-        }
+        drawable?.draw(canvas)
     }
-
-    private fun getThemeAwareDrawable(resId: Int): Drawable? {
-        return if (resId != 0) {
-            AppCompatResources.getDrawable(context, resId)
-        } else null
-    }
-
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -109,17 +137,11 @@ class PlaybackButtonView @JvmOverloads constructor(
         return super.onTouchEvent(event)
     }
 
-    /**
-     * Публичный метод для переключения состояния кнопки
-     */
     fun toggleState() {
         currentState = if (currentState == State.PLAY) State.PAUSE else State.PLAY
         invalidate()
     }
 
-    /**
-     * Публичный метод для установки состояния кнопки
-     */
     fun setState(state: State) {
         if (currentState != state) {
             currentState = state
@@ -127,14 +149,8 @@ class PlaybackButtonView @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Публичный метод для получения текущего состояния
-     */
     fun getState(): State = currentState
 
-    /**
-     * Установка слушателя нажатий
-     */
     fun setOnPlaybackClickListener(listener: () -> Unit) {
         this.onClickListener = listener
     }
@@ -143,6 +159,7 @@ class PlaybackButtonView @JvmOverloads constructor(
      * Очистка ресурсов
      */
     fun release() {
-        // Ничего не делаем, так как используем Drawable
+        playDrawable = null
+        pauseDrawable = null
     }
 }

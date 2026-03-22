@@ -24,13 +24,12 @@ val viewModelModule = module {
 
     viewModel {
         PlayerViewModel(
-            playerInteractor = get(),
             formatTimeInteractor = get(),
             getCountryNameInteractor = get(),
             getCoverArtworkInteractor = get(),
             getReleaseYearInteractor = get(),
             favoriteTracksInteractor = get(),
-            playlistInteractor = get<PlaylistInteractor>()
+            playlistInteractor = get()
         )
     }
 

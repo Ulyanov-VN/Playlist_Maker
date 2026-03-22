@@ -96,18 +96,18 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/add_to_playlist"
                 android:src="@drawable/ic_playlist"
-                app:layout_constraintBottom_toBottomOf="@id/playPauseButton"
+                app:layout_constraintBottom_toBottomOf="@id/playbackButton"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@id/playPauseButton" />
+                app:layout_constraintTop_toTopOf="@id/playbackButton" />
 
-            <!-- Кнопка Play/Pause -->
-            <ImageButton
-                android:id="@+id/playPauseButton"
+            <!-- Заменяем ImageButton на PlaybackButtonView -->
+            <com.example.playlistmaker.player.ui.views.PlaybackButtonView
+                android:id="@+id/playbackButton"
                 android:layout_width="72dp"
                 android:layout_height="72dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/play_pause"
-                android:src="@drawable/play_day"
+                app:playIcon="@drawable/play_day"
+                app:pauseIcon="@drawable/pause_day"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/favoriteButton"
                 app:layout_constraintStart_toEndOf="@id/addToPlaylistButton"
@@ -122,9 +122,9 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/add_to_favorites"
                 android:src="@drawable/ic_favorite_border"
-                app:layout_constraintBottom_toBottomOf="@id/playPauseButton"
+                app:layout_constraintBottom_toBottomOf="@id/playbackButton"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/playPauseButton" />
+                app:layout_constraintTop_toTopOf="@id/playbackButton" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- Время трека -->
@@ -138,6 +138,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/controlsLayout" />
 
+        <!-- Остальная часть разметки без изменений -->
         <!-- Дополнительная информация -->
         <TextView
             android:id="@+id/labelDuration"

@@ -1,15 +1,25 @@
 package com.example.playlistmaker.player.ui
 
+import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.view.*
+import android.os.IBinder
+import android.view.MotionEvent
+import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -18,7 +28,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
 import com.example.playlistmaker.databinding.FragmentPlayerWithBottomSheetBinding
-import com.example.playlistmaker.player.ui.viewmodels.PlayerState
+import com.example.playlistmaker.player.service.AudioPlayerService
+import com.example.playlistmaker.player.ui.viewmodels.AddToPlaylistStatus
 import com.example.playlistmaker.player.ui.viewmodels.PlayerStatus
 import com.example.playlistmaker.player.ui.viewmodels.PlayerViewModel
 import com.example.playlistmaker.player.ui.views.PlaybackButtonView
@@ -32,18 +43,18 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
 
     private val viewModel: PlayerViewModel by viewModel()
+
     private var _binding: FragmentPlayerWithBottomSheetBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<View>
     private lateinit var playlistsAdapter: PlaylistBottomSheetAdapter
     private lateinit var playbackButton: PlaybackButtonView
+
     private var currentTrack: Track? = null
 
-    // Флаг для отслеживания, нужно ли синхронизировать состояние кнопки
     private var shouldSyncButtonState = true
 
-    // Views from bottom sheet
     private lateinit var bottomSheetContainer: View
     private lateinit var overlay: View
     private lateinit var playlistsRecyclerView: androidx.recyclerview.widget.RecyclerView
@@ -52,7 +63,6 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
     private lateinit var bottomSheetTitle: android.widget.TextView
     private lateinit var bottomSheetDivider: View
 
-    // Для обработки свайпа
     private var isDraggingBottomSheet = false
     private var startY = 0f
     private var bottomSheetInitialY = 0f
@@ -60,13 +70,34 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
     private var isClosingProgrammatically = false
     private var isOpeningProgrammatically = false
 
+    private var isBound = false
+    private var isScreenClosing = false
+
+    private val playerServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as? AudioPlayerService.PlayerBinder ?: return
+            val playerService = binder.getService()
+            viewModel.attachPlayerController(playerService)
+            isBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            viewModel.detachPlayerController()
+            isBound = false
+        }
+    }
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentPlayerWithBottomSheetBinding.bind(view)
-
-        // Инициализация PlaybackButtonView
         playbackButton = binding.playbackButton
+
+        requestNotificationPermissionIfNeeded()
 
         val track: Track? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             arguments?.getParcelable("track", Track::class.java)
@@ -93,29 +124,78 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
         observeAddToPlaylistStatus()
         observeAddedToPlaylistIds()
         observePlaylists()
+
+        startAndBindPlayerService(track)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.onUiForegrounded()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (!isScreenClosing) {
+            viewModel.onUiBackgrounded(hasNotificationPermission())
+        }
+    }
+
+    override fun onDestroyView() {
+        currentAnimator?.cancel()
+        playbackButton.release()
+
+        if (isBound) {
+            requireContext().unbindService(playerServiceConnection)
+            isBound = false
+        }
+
+        viewModel.detachPlayerController()
+
+        _binding = null
+        super.onDestroyView()
+    }
+
+    private fun startAndBindPlayerService(track: Track) {
+        val intent = Intent(requireContext(), AudioPlayerService::class.java).apply {
+            putExtra(AudioPlayerService.EXTRA_PREVIEW_URL, track.previewUrl.orEmpty())
+            putExtra(AudioPlayerService.EXTRA_TRACK_NAME, track.trackName.orEmpty())
+            putExtra(AudioPlayerService.EXTRA_ARTIST_NAME, track.artistName.orEmpty())
+        }
+
+        requireContext().startService(intent)
+
+        isBound = requireContext().bindService(
+            intent,
+            playerServiceConnection,
+            Context.BIND_AUTO_CREATE
+        )
     }
 
     private fun setupBackHandling() {
         binding.backButton.setOnClickListener {
-            viewModel.pausePlayback()
-            findNavController().popBackStack()
+            closeScreen()
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    // Если Bottom Sheet открыт - закрываем его
                     if (::bottomSheetBehavior.isInitialized &&
-                        bottomSheetBehavior.state != BottomSheetBehavior.STATE_HIDDEN) {
+                        bottomSheetBehavior.state != BottomSheetBehavior.STATE_HIDDEN
+                    ) {
                         hideBottomSheet()
                     } else {
-                        viewModel.pausePlayback()
-                        findNavController().popBackStack()
+                        closeScreen()
                     }
                 }
             }
         )
+    }
+
+    private fun closeScreen() {
+        isScreenClosing = true
+        viewModel.onScreenClosing()
+        findNavController().popBackStack()
     }
 
     private fun observePlayerState() {
@@ -124,7 +204,6 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
 
             when (state.status) {
                 PlayerStatus.PLAYING -> {
-                    // Синхронизируем кнопку ТОЛЬКО если изменение пришло не от нажатия
                     if (shouldSyncButtonState) {
                         playbackButton.setState(PlaybackButtonView.State.PAUSE)
                     }
@@ -132,6 +211,7 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
                     playbackButton.isEnabled = true
                     shouldSyncButtonState = true
                 }
+
                 PlayerStatus.PAUSED -> {
                     if (shouldSyncButtonState) {
                         playbackButton.setState(PlaybackButtonView.State.PLAY)
@@ -140,19 +220,25 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
                     playbackButton.isEnabled = true
                     shouldSyncButtonState = true
                 }
+
                 PlayerStatus.STOPPED -> {
                     playbackButton.setState(PlaybackButtonView.State.PLAY)
                     updateCurrentTime(0)
                     playbackButton.isEnabled = true
+                    shouldSyncButtonState = true
                 }
+
                 PlayerStatus.PREPARED -> {
                     binding.durationValue.text = state.trackDuration
                     updateCurrentTime(0)
                     playbackButton.setState(PlaybackButtonView.State.PLAY)
                     playbackButton.isEnabled = true
+                    shouldSyncButtonState = true
                 }
+
                 PlayerStatus.ERROR -> {
                     playbackButton.isEnabled = false
+                    shouldSyncButtonState = true
                 }
             }
         }
@@ -172,19 +258,14 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
             .transform(RoundedCorners(resources.getDimensionPixelSize(R.dimen.corner_radius)))
             .into(binding.albumArt)
 
-        binding.trackName.text =
-            track.trackName ?: getString(R.string.unknown_track)
-        binding.artistName.text =
-            track.artistName ?: getString(R.string.unknown_artist)
-        binding.albumValue.text =
-            track.collectionName ?: getString(R.string.unknown_album)
+        binding.trackName.text = track.trackName ?: getString(R.string.unknown_track)
+        binding.artistName.text = track.artistName ?: getString(R.string.unknown_artist)
+        binding.albumValue.text = track.collectionName ?: getString(R.string.unknown_album)
 
         val releaseYear = viewModel.getReleaseYear(track.releaseDate)
-        binding.yearValue.text =
-            releaseYear ?: getString(R.string.unknown_year)
+        binding.yearValue.text = releaseYear ?: getString(R.string.unknown_year)
 
-        binding.genreValue.text =
-            track.primaryGenreName ?: getString(R.string.unknown_genre)
+        binding.genreValue.text = track.primaryGenreName ?: getString(R.string.unknown_genre)
 
         val countryName = viewModel.getCountryName(track.country)
         binding.countryValue.text = countryName
@@ -192,14 +273,17 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
 
     private fun setupPlaybackButton() {
         playbackButton.setOnPlaybackClickListener {
-            // Здесь НЕ вызываем togglePlayPause, потому что кнопка уже сменила состояние
-            // Просто передаем команду плееру с текущим состоянием кнопки
-            shouldSyncButtonState = false // Не синхронизировать кнопку при следующем обновлении
-            val isPlaying = playbackButton.getState() == PlaybackButtonView.State.PAUSE
-            if (isPlaying) {
-                viewModel.startPlayback()
-            } else {
-                viewModel.pausePlayback()
+            val state = viewModel.state.value ?: return@setOnPlaybackClickListener
+
+            when (state.status) {
+                PlayerStatus.PLAYING -> viewModel.pausePlayback()
+                PlayerStatus.PREPARED,
+                PlayerStatus.PAUSED -> viewModel.startPlayback()
+                PlayerStatus.STOPPED -> {
+                    // пока сервис ещё не prepared, просто игнорируем первый клик
+                    // или можно показать toast "Подготовка аудио..."
+                }
+                PlayerStatus.ERROR -> Unit
             }
         }
     }
@@ -226,41 +310,32 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
     }
 
     private fun setupBottomSheet(rootView: View) {
-        // Находим все элементы
         bottomSheetContainer = rootView.findViewById(R.id.bottomSheetContainer)
         overlay = rootView.findViewById(R.id.overlay)
 
-        // Находим элементы внутри Bottom Sheet
         playlistsRecyclerView = bottomSheetContainer.findViewById(R.id.playlistsRecyclerView)
         newPlaylistButton = bottomSheetContainer.findViewById(R.id.newPlaylistButton)
         dragHandle = bottomSheetContainer.findViewById(R.id.dragHandle)
         bottomSheetTitle = bottomSheetContainer.findViewById(R.id.title)
         bottomSheetDivider = bottomSheetContainer.findViewById(R.id.divider)
 
-        // Настройка RecyclerView
         playlistsAdapter = PlaylistBottomSheetAdapter(emptyList()) { playlist ->
-            currentTrack?.let { track ->
-                viewModel.addTrackToPlaylist(playlist)
-                hideBottomSheet()
-            }
+            viewModel.addTrackToPlaylist(playlist)
+            hideBottomSheet()
         }
 
         playlistsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         playlistsRecyclerView.adapter = playlistsAdapter
 
-        // Получаем высоту экрана
         val displayMetrics = resources.displayMetrics
         val screenHeight = displayMetrics.heightPixels
         val halfScreenHeight = screenHeight / 2
 
-        // Устанавливаем начальную позицию - за пределами экрана снизу
         bottomSheetContainer.translationY = screenHeight.toFloat()
         bottomSheetInitialY = (screenHeight - halfScreenHeight).toFloat()
 
-        // Настройка Bottom Sheet Behavior
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetContainer).apply {
             state = BottomSheetBehavior.STATE_HIDDEN
-
             isFitToContents = false
             isHideable = true
             skipCollapsed = true
@@ -282,6 +357,7 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
                             }
                             isClosingProgrammatically = false
                         }
+
                         BottomSheetBehavior.STATE_EXPANDED -> {
                             if (!isOpeningProgrammatically) {
                                 overlay.visibility = View.VISIBLE
@@ -291,10 +367,12 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
                             }
                             isOpeningProgrammatically = false
                         }
+
                         BottomSheetBehavior.STATE_COLLAPSED -> {
                             state = BottomSheetBehavior.STATE_EXPANDED
                         }
-                        else -> { }
+
+                        else -> Unit
                     }
                 }
 
@@ -315,11 +393,11 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
             })
         }
 
-        dragHandle.setOnTouchListener { v, event ->
+        dragHandle.setOnTouchListener { _, event ->
             handleBottomSheetSwipe(event)
         }
 
-        bottomSheetTitle.setOnTouchListener { v, event ->
+        bottomSheetTitle.setOnTouchListener { _, event ->
             handleBottomSheetSwipe(event)
         }
 
@@ -332,7 +410,7 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
             hideBottomSheet()
         }
 
-        bottomSheetContainer.setOnTouchListener { v, event ->
+        bottomSheetContainer.setOnTouchListener { _, event ->
             if (event.y < 100.dpToPx()) {
                 return@setOnTouchListener handleBottomSheetSwipe(event)
             }
@@ -353,8 +431,10 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
                 val currentY = event.rawY
                 val deltaY = currentY - startY
 
-                if (deltaY > 20 && !isDraggingBottomSheet &&
-                    bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+                if (deltaY > 20 &&
+                    !isDraggingBottomSheet &&
+                    bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED
+                ) {
                     isDraggingBottomSheet = true
                 }
 
@@ -374,7 +454,7 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
                 val deltaY = event.rawY - startY
 
                 if (deltaY > 150.dpToPx() || isDraggingBottomSheet) {
-                    hideBottomSheetWithAnimation(deltaY)
+                    hideBottomSheetWithAnimation()
                 } else {
                     resetBottomSheetPosition()
                 }
@@ -385,11 +465,10 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
         return true
     }
 
-    private fun hideBottomSheetWithAnimation(deltaY: Float) {
+    private fun hideBottomSheetWithAnimation() {
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
 
         currentAnimator?.cancel()
-
         isClosingProgrammatically = true
 
         val bottomSheetAnimator = ObjectAnimator.ofFloat(
@@ -402,15 +481,22 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
             interpolator = AccelerateInterpolator()
         }
 
-        val overlayAnimator = ObjectAnimator.ofFloat(overlay, "alpha", overlay.alpha, 0f).apply {
+        val overlayAnimator = ObjectAnimator.ofFloat(
+            overlay,
+            "alpha",
+            overlay.alpha,
+            0f
+        ).apply {
             duration = 250L
             interpolator = AccelerateInterpolator()
         }
 
         currentAnimator = bottomSheetAnimator
+
         bottomSheetAnimator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
                 bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+                overlay.visibility = View.GONE
                 currentAnimator = null
             }
 
@@ -465,7 +551,6 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
             val halfScreenHeight = screenHeight / 2
 
             currentAnimator?.cancel()
-
             isOpeningProgrammatically = true
 
             val layoutParams = bottomSheetContainer.layoutParams
@@ -513,7 +598,6 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
         currentAnimator?.cancel()
 
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
-
         isClosingProgrammatically = true
 
         currentAnimator = ObjectAnimator.ofFloat(
@@ -564,25 +648,27 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
         viewModel.addToPlaylistStatus.observe(viewLifecycleOwner) { status ->
             status?.let {
                 when (it) {
-                    is com.example.playlistmaker.player.ui.viewmodels.AddToPlaylistStatus.Success -> {
+                    is AddToPlaylistStatus.Success -> {
                         CustomToast.showTrackAddedToPlaylist(
                             context = requireContext(),
                             playlistName = it.playlistName,
                             duration = Toast.LENGTH_SHORT
                         )
                     }
-                    is com.example.playlistmaker.player.ui.viewmodels.AddToPlaylistStatus.AlreadyExists -> {
+
+                    is AddToPlaylistStatus.AlreadyExists -> {
                         CustomToast.showTrackAlreadyInPlaylist(
                             context = requireContext(),
                             playlistName = it.playlistName,
                             duration = Toast.LENGTH_SHORT
                         )
                     }
-                    is com.example.playlistmaker.player.ui.viewmodels.AddToPlaylistStatus.Error -> {
+
+                    is AddToPlaylistStatus.Error -> {
                         CustomToast.show(
                             context = requireContext(),
                             message = "Ошибка: ${it.message}",
-                            type = com.example.playlistmaker.utils.CustomToast.ToastType.WARNING,
+                            type = CustomToast.ToastType.WARNING,
                             duration = Toast.LENGTH_SHORT
                         )
                     }
@@ -604,7 +690,8 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
             binding.addToPlaylistButton.setImageResource(R.drawable.ic_add_to_playlist)
         } else {
             val isDarkTheme = isDarkTheme()
-            val playlistIcon = if (isDarkTheme) R.drawable.ic_playlist_night else R.drawable.ic_playlist
+            val playlistIcon =
+                if (isDarkTheme) R.drawable.ic_playlist_night else R.drawable.ic_playlist
             binding.addToPlaylistButton.setImageResource(playlistIcon)
         }
     }
@@ -616,25 +703,36 @@ class PlayerFragment : Fragment(R.layout.fragment_player_with_bottom_sheet) {
 
     private fun updateFavoriteButton(isFavorite: Boolean) {
         binding.favoriteButton.setImageResource(
-            if (isFavorite) R.drawable.ic_favorite_border_add else R.drawable.ic_favorite_border
+            if (isFavorite) R.drawable.ic_favorite_border_add
+            else R.drawable.ic_favorite_border
         )
     }
 
     private fun updateCurrentTime(currentPosition: Int) {
-        binding.trackDuration.text =
-            viewModel.formatTime(currentPosition.toLong())
+        binding.trackDuration.text = viewModel.formatTime(currentPosition.toLong())
     }
 
-    override fun onPause() {
-        super.onPause()
-        viewModel.pausePlayback()
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (!granted) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        currentAnimator?.cancel()
-        playbackButton.release()
-        viewModel.releasePlayer()
-        _binding = null
+    private fun hasNotificationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
     }
 }

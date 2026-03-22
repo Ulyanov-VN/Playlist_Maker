@@ -10,17 +10,22 @@ import com.example.playlistmaker.player.domain.interactor.FormatTimeInteractor
 import com.example.playlistmaker.player.domain.interactor.GetCountryNameInteractor
 import com.example.playlistmaker.player.domain.interactor.GetCoverArtworkInteractor
 import com.example.playlistmaker.player.domain.interactor.GetReleaseYearInteractor
-import com.example.playlistmaker.player.domain.interactor.PlayerInteractor
+import com.example.playlistmaker.player.domain.service.AudioPlayerServiceController
+import com.example.playlistmaker.player.domain.service.ServicePlayerStatus
 import com.example.playlistmaker.playlist.domain.interactor.PlaylistInteractor
 import com.example.playlistmaker.playlist.domain.model.Playlist
 import com.example.playlistmaker.search.domain.entity.Track
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+sealed class AddToPlaylistStatus {
+    data class Success(val playlistName: String) : AddToPlaylistStatus()
+    data class AlreadyExists(val playlistName: String) : AddToPlaylistStatus()
+    data class Error(val message: String) : AddToPlaylistStatus()
+}
+
 class PlayerViewModel(
-    private val playerInteractor: PlayerInteractor,
     private val formatTimeInteractor: FormatTimeInteractor,
     private val getCountryNameInteractor: GetCountryNameInteractor,
     private val getCoverArtworkInteractor: GetCoverArtworkInteractor,
@@ -28,6 +33,10 @@ class PlayerViewModel(
     private val favoriteTracksInteractor: FavoriteTracksInteractor,
     private val playlistInteractor: PlaylistInteractor
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "PlayerViewModel"
+    }
 
     private val _state = MutableLiveData(PlayerState())
     val state: LiveData<PlayerState> = _state
@@ -38,71 +47,87 @@ class PlayerViewModel(
     private val _addToPlaylistStatus = MutableLiveData<AddToPlaylistStatus?>(null)
     val addToPlaylistStatus: LiveData<AddToPlaylistStatus?> = _addToPlaylistStatus
 
-    // Новое состояние для отслеживания добавленных треков в текущей сессии
     private val _addedToPlaylistIds = MutableLiveData<Set<Long>>(emptySet())
     val addedToPlaylistIds: LiveData<Set<Long>> = _addedToPlaylistIds
 
     private var currentTrack: Track? = null
-    private var progressJob: Job? = null
-    private var wasCompleted: Boolean = false
+    private var playerController: AudioPlayerServiceController? = null
 
-    companion object {
-        private const val PROGRESS_UPDATE_DELAY_MS = 300L
-        private const val TAG = "PlayerViewModel"
-    }
+    private var playlistsJob: Job? = null
+    private var serviceStateJob: Job? = null
 
     fun initialize(track: Track) {
         currentTrack = track
-        wasCompleted = false
+
+        _state.value = (_state.value ?: PlayerState()).copy(
+            status = PlayerStatus.STOPPED,
+            currentPosition = 0,
+            trackDuration = formatTrackDuration(track),
+            errorMessage = null
+        )
 
         checkFavoriteStatus(track)
         loadPlaylists()
+    }
 
-        playerInteractor.setOnPreparedListener {
-            wasCompleted = false
+    fun attachPlayerController(controller: AudioPlayerServiceController) {
+        playerController = controller
+        observeServiceState()
+    }
 
-            val duration = track.trackTimeMillis
-                ?.let { formatTimeInteractor.executeForTrack(it) }
-                ?: "--:--"
+    fun detachPlayerController() {
+        serviceStateJob?.cancel()
+        serviceStateJob = null
+        playerController = null
+    }
 
-            _state.value = _state.value.copy(
-                status = PlayerStatus.PREPARED,
-                trackDuration = duration,
-                currentPosition = 0,
-                errorMessage = null
-            )
+    private fun observeServiceState() {
+        serviceStateJob?.cancel()
+
+        val controller = playerController ?: return
+
+        serviceStateJob = viewModelScope.launch {
+            controller.stateFlow().collectLatest { serviceState ->
+                val previousState = _state.value ?: PlayerState()
+
+                val mappedStatus = when (serviceState.status) {
+                    ServicePlayerStatus.IDLE -> PlayerStatus.STOPPED
+                    ServicePlayerStatus.PREPARED -> PlayerStatus.PREPARED
+                    ServicePlayerStatus.PLAYING -> PlayerStatus.PLAYING
+                    ServicePlayerStatus.PAUSED -> PlayerStatus.PAUSED
+                    ServicePlayerStatus.COMPLETED -> PlayerStatus.PAUSED
+                    ServicePlayerStatus.ERROR -> PlayerStatus.ERROR
+                }
+
+                val mappedPosition = when (serviceState.status) {
+                    ServicePlayerStatus.IDLE,
+                    ServicePlayerStatus.COMPLETED -> 0
+                    else -> serviceState.currentPosition
+                }
+
+                val mappedDuration = if (serviceState.duration > 0) {
+                    formatTimeInteractor.executeForTrack(serviceState.duration.toLong())
+                } else {
+                    previousState.trackDuration.ifBlank { formatTrackDuration(currentTrack) }
+                }
+
+                _state.postValue(
+                    previousState.copy(
+                        status = mappedStatus,
+                        currentPosition = mappedPosition,
+                        trackDuration = mappedDuration,
+                        errorMessage = serviceState.errorMessage
+                    )
+                )
+            }
         }
-
-        playerInteractor.setOnCompletionListener {
-            stopProgressUpdates()
-            wasCompleted = true
-            playerInteractor.seekTo(0)
-
-            _state.value = _state.value.copy(
-                status = PlayerStatus.PAUSED,
-                currentPosition = 0,
-                errorMessage = null
-            )
-        }
-
-        playerInteractor.setOnErrorListener { errorMessage ->
-            stopProgressUpdates()
-            wasCompleted = false
-
-            _state.value = _state.value.copy(
-                status = PlayerStatus.ERROR,
-                errorMessage = errorMessage
-            )
-        }
-
-        playerInteractor.initialize(track)
     }
 
     private fun checkFavoriteStatus(track: Track) {
         viewModelScope.launch {
             try {
-                val fav = favoriteTracksInteractor.checkIsFavorite(track)
-                _state.value = _state.value.copy(isFavorite = fav)
+                val isFavorite = favoriteTracksInteractor.checkIsFavorite(track)
+                _state.value = (_state.value ?: PlayerState()).copy(isFavorite = isFavorite)
             } catch (e: Exception) {
                 Log.e(TAG, "Error checking favorite status", e)
             }
@@ -112,24 +137,27 @@ class PlayerViewModel(
     fun onFavoriteClicked() {
         viewModelScope.launch {
             val track = currentTrack ?: return@launch
+            val currentState = _state.value ?: PlayerState()
+
             try {
-                if (_state.value.isFavorite) {
+                if (currentState.isFavorite) {
                     favoriteTracksInteractor.removeFromFavorites(track)
-                    _state.value = _state.value.copy(isFavorite = false)
+                    _state.value = currentState.copy(isFavorite = false)
                 } else {
                     favoriteTracksInteractor.addToFavorites(track)
-                    _state.value = _state.value.copy(isFavorite = true)
+                    _state.value = currentState.copy(isFavorite = true)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error updating favorite", e)
+                Log.e(TAG, "Error updating favorite status", e)
             }
         }
     }
 
     fun loadPlaylists() {
-        viewModelScope.launch {
+        playlistsJob?.cancel()
+        playlistsJob = viewModelScope.launch {
             try {
-                playlistInteractor.getAllPlaylists().collect { playlists ->
+                playlistInteractor.getAllPlaylists().collectLatest { playlists ->
                     _playlists.value = playlists
                 }
             } catch (e: Exception) {
@@ -143,134 +171,79 @@ class PlayerViewModel(
             val track = currentTrack ?: return@launch
 
             try {
-                // Проверяем, есть ли трек уже в плейлисте
                 if (playlist.trackIds.contains(track.trackId)) {
                     _addToPlaylistStatus.value = AddToPlaylistStatus.AlreadyExists(playlist.name)
                     return@launch
                 }
 
-                // Добавляем трек в плейлист
                 val success = playlistInteractor.addTrackToPlaylist(playlist, track)
 
                 if (success) {
-                    // Добавляем ID трека в множество добавленных
                     val currentIds = _addedToPlaylistIds.value ?: emptySet()
                     _addedToPlaylistIds.value = currentIds + track.trackId
-
                     _addToPlaylistStatus.value = AddToPlaylistStatus.Success(playlist.name)
-                    // Обновляем список плейлистов после добавления
                     loadPlaylists()
                 } else {
-                    _addToPlaylistStatus.value = AddToPlaylistStatus.Error("Ошибка добавления")
+                    _addToPlaylistStatus.value = AddToPlaylistStatus.Error("Не удалось добавить трек")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error adding track to playlist", e)
-                _addToPlaylistStatus.value = AddToPlaylistStatus.Error("Ошибка: ${e.message}")
+                _addToPlaylistStatus.value =
+                    AddToPlaylistStatus.Error(e.message ?: "Неизвестная ошибка")
             }
         }
-    }
-
-    // Проверяем, добавлен ли текущий трек в какой-либо плейлист
-    fun isTrackAddedToPlaylist(): Boolean {
-        val trackId = currentTrack?.trackId ?: return false
-        val addedIds = _addedToPlaylistIds.value ?: emptySet()
-        return addedIds.contains(trackId)
     }
 
     fun clearAddToPlaylistStatus() {
         _addToPlaylistStatus.value = null
     }
 
-    fun togglePlayPause() {
-        if (!playerInteractor.isPrepared()) return
-
-        if (playerInteractor.isPlaying()) {
-            pausePlayback()
-        } else {
-            startPlayback()
-        }
-    }
-
     fun startPlayback() {
-        if (wasCompleted) {
-            playerInteractor.seekTo(0)
-            wasCompleted = false
-
-            _state.value = _state.value.copy(
-                status = PlayerStatus.PLAYING,
-                currentPosition = 0,
-                errorMessage = null
-            )
-        } else {
-            _state.value = _state.value.copy(
-                status = PlayerStatus.PLAYING,
-                currentPosition = playerInteractor.getCurrentPosition(),
-                errorMessage = null
-            )
-        }
-
-        playerInteractor.play()
-        startProgressUpdates()
+        playerController?.play()
     }
 
     fun pausePlayback() {
-        playerInteractor.pause()
-        stopProgressUpdates()
-
-        _state.value = _state.value.copy(
-            status = PlayerStatus.PAUSED,
-            currentPosition = playerInteractor.getCurrentPosition(),
-            errorMessage = null
-        )
+        playerController?.pause()
     }
 
-    fun releasePlayer() {
-        stopProgressUpdates()
-        playerInteractor.release()
-        wasCompleted = false
-
-        _state.value = _state.value.copy(
-            status = PlayerStatus.STOPPED,
-            currentPosition = 0,
-            errorMessage = null
-        )
-    }
-
-    private fun startProgressUpdates() {
-        progressJob?.cancel()
-        progressJob = viewModelScope.launch {
-            try {
-                while (playerInteractor.isPlaying()) {
-                    _state.value = _state.value.copy(
-                        status = PlayerStatus.PLAYING,
-                        currentPosition = playerInteractor.getCurrentPosition()
-                    )
-                    delay(PROGRESS_UPDATE_DELAY_MS)
-                }
-            } catch (e: Exception) {
-                // Корутина была отменена
-            }
+    fun onUiBackgrounded(hasNotificationPermission: Boolean) {
+        val currentState = _state.value ?: return
+        if (currentState.status == PlayerStatus.PLAYING && hasNotificationPermission) {
+            playerController?.enterForeground()
         }
     }
 
-    private fun stopProgressUpdates() {
-        progressJob?.cancel()
-        progressJob = null
+    fun onUiForegrounded() {
+        playerController?.exitForeground()
+    }
+
+    fun onScreenClosing() {
+        playerController?.stopServicePlayback()
+    }
+
+    fun formatTime(millis: Long): String {
+        return formatTimeInteractor.execute(millis)
+    }
+
+    fun getCountryName(countryCode: String?): String {
+        return getCountryNameInteractor.execute(countryCode)
+    }
+
+    fun getCoverArtwork(artworkUrl100: String?): String? {
+        return getCoverArtworkInteractor.execute(artworkUrl100)
+    }
+
+    fun getReleaseYear(releaseDate: String?): String? {
+        return getReleaseYearInteractor.execute(releaseDate)
+    }
+
+    private fun formatTrackDuration(track: Track?): String {
+        return formatTimeInteractor.executeForTrack(track?.trackTimeMillis)
     }
 
     override fun onCleared() {
         super.onCleared()
-        progressJob?.cancel()
+        playlistsJob?.cancel()
+        serviceStateJob?.cancel()
     }
-
-    fun formatTime(millis: Long): String = formatTimeInteractor.execute(millis)
-    fun getCountryName(countryCode: String?): String = getCountryNameInteractor.execute(countryCode)
-    fun getCoverArtwork(artworkUrl100: String?): String? = getCoverArtworkInteractor.execute(artworkUrl100)
-    fun getReleaseYear(releaseDate: String?): String? = getReleaseYearInteractor.execute(releaseDate)
-}
-
-sealed class AddToPlaylistStatus {
-    data class Success(val playlistName: String) : AddToPlaylistStatus()
-    data class AlreadyExists(val playlistName: String) : AddToPlaylistStatus()
-    data class Error(val message: String) : AddToPlaylistStatus()
 }

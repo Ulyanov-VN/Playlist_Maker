@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/mediaFragment">
+
+    <fragment
+        android:id="@+id/mediaFragment"
+        android:name="com.example.playlistmaker.media.ui.MediaFragment"
+        android:label="@string/media"
+        tools:layout="@layout/activity_media">
+
+        <action
+            android:id="@+id/action_media_to_create_playlist"
+            app:destination="@id/createPlaylistFragment" />
+
+        <action
+            android:id="@+id/action_media_to_playlistDetails"
+            app:destination="@id/playlistDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.example.playlistmaker.search.ui.SearchFragment"
+        android:label="@string/search"
+        tools:layout="@layout/activity_search" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.playlistmaker.settings.ui.SettingsFragment"
+        android:label="@string/settings"
+        tools:layout="@layout/activity_settings" />
+
+    <fragment
+        android:id="@+id/playerFragment"
+        android:name="com.example.playlistmaker.player.ui.PlayerFragment"
+        android:label="@string/media"
+        tools:layout="@layout/fragment_player_with_bottom_sheet">
+
+        <action
+            android:id="@+id/action_player_to_search"
+            app:destination="@id/searchFragment" />
+
+        <action
+            android:id="@+id/action_player_to_media"
+            app:destination="@id/mediaFragment" />
+
+        <action
+            android:id="@+id/action_player_to_create_playlist"
+            app:destination="@id/createPlaylistFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createPlaylistFragment"
+        android:name="com.example.playlistmaker.playlist.ui.fragments.CreatePlaylistFragment"
+        android:label="@string/new_playlist"
+        tools:layout="@layout/fragment_create_playlist">
+
+        <action
+            android:id="@+id/action_create_playlist_to_media"
+            app:destination="@id/mediaFragment"
+            app:popUpTo="@id/mediaFragment"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/playlistDetailsFragment"
+        android:name="com.example.playlistmaker.playlist.ui.fragments.PlaylistDetailsFragment"
+        android:label="Плейлист"
+        tools:layout="@layout/fragment_playlist">
+
+        <argument
+            android:name="playlistId"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_playlistDetails_to_editPlaylist"
+            app:destination="@id/editPlaylistFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/editPlaylistFragment"
+        android:name="com.example.playlistmaker.playlist.ui.fragments.EditPlaylistFragment"
+        android:label="@string/edit_playlist_title"
+        tools:layout="@layout/fragment_create_playlist">
+
+        <argument
+            android:name="playlistId"
+            app:argType="long" />
+    </fragment>
+
+</navigation>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Пунктирная обводка -->
+    <stroke
+        android:width="1dp"
+        android:color="#AEAFB4"
+        android:dashWidth="35dp"
+        android:dashGap="35dp" />
+
+    <!-- Прозрачная заливка -->
+    <solid android:color="@android:color/transparent" />
+
+    <!-- Закругленные углы (добавьте эту строку) -->
+    <corners android:radius="8dp" /> <!-- или любое значение -->
+
+    <!-- Размер -->
+    <size android:width="312dp" android:height="312dp" />
+
+</shape>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <!-- Контейнер, центрирующий всё внутри себя -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:layout_gravity="center">
+
+        <!-- Ваша картинка по центру -->
+        <ImageView
+            android:id="@+id/iconSmile3"
+            style="@style/ImageViewSmile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <!-- Отступ между картинкой и текстом -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="16dp"/>
+
+        <!-- Ваш текст по центру под картинкой -->
+        <TextView
+            android:id="@+id/tracksEmptyText2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/search_nothing"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="@dimen/text_search_placeholder"
+            android:textFontWeight="400"
+            android:letterSpacing="0"/>
+    </LinearLayout>
+</FrameLayout>

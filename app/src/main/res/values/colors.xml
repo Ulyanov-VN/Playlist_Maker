@@ -1,5 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="black">#1A1B22</color>
+    <color name="white">#FFFFFF</color>
+    <color name="blue">#3772E7</color>
+    <color name="grey">#E6E8EB</color>
+    <color name="text_grey">#AEAFB4</color>
+    <color name="icon_tint">#AEAFB4</color>
+    <color name="search_icon_tint">#FF000000</color>
+
+    <!-- Цвет фона ползунка (track) -->
+    <color name="switch_track">#808080</color>
+
+    <!-- Цвет переключателя (thumb) -->
+    <color name="switch_thumb">#FFFFFF</color>
+
+    <color name="cursor_color">#3772E7</color>
+
+
+    <color name="ic_player_background_night">#40FFFFFF</color>
+    <color name="ic_player_background_day">#401A1B22</color>
+    <!-- Добавьте эти цвета -->
+    <color name="toast_success">#4CAF50</color> <!-- Зеленый для успеха -->
+    <color name="toast_info">#2196F3</color>    <!-- Синий для информации -->
+    <color name="toast_warning">#FF9800</color> <!-- Оранжевый для предупреждения -->
+    <color name="toast_bg_dark">#1A1B22</color>
+    <color name="toast_text_dark">#FFFFFF</color>
+
+    <color name="green">#4CAF50</color>  <!-- Success color -->
+    <color name="orange">#FF9800</color> <!-- Warning color -->
+
+
+
+    <color name="yp_black">#1A1B22</color>
+    <color name="yp_white">#FFFFFF</color>
+
+    <color name="yp_blue">#3772E7</color>
+    <color name="dialog_scrim">#80000000</color>
 </resources>

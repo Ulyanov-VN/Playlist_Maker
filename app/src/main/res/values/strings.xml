@@ -1,3 +1,117 @@
 <resources>
-    <string name="app_name">Playlist Maker</string>
+    <string name="app_name">Playlist maker</string>
+    <string name="search">Поиск</string>
+    <string name="media">Медиатека</string>
+    <string name="settings_lines">Строки настроек</string>
+    <string name="settings">Настройки</string>
+    <string name="dark_theme">Темная тема</string>
+    <string name="share_app">Поделиться приложением</string>
+    <string name="wr_support">Написать в поддержку</string>
+    <string name="user_agreement">Пользовательское соглашение</string>
+    <string name="icon_description">Назад</string>
+    <string name="favorite_tracks">Избранные треки</string>
+    <string name="Playlists">Плейлисты</string>
+    <string name="text_favorite_tracks">Ваша медиатека пуста</string>
+    <string name="text_playlist">Вы не создали \nни одного плейлиста</string>
+    <string name="text_playlist2">Вы не создали ни одного плейлиста</string>
+    <string name="new_playlist">Новый плейлист</string>
+    <string name="share_app_text">Посмотрите этот курс по Android-разработке в Практикуме: https://practicum.yandex.ru/android-developer/</string>
+    <string name="share_app_title">Поделиться приложением</string>
+
+    <string name="support_email">ul.vn@yandex.ru</string>
+    <string name="support_subject">Сообщение разработчикам и разработчицам приложения Playlist Maker</string>
+    <string name="support_body">Спасибо разработчикам и разработчицам за крутое приложение!</string>
+
+    <string name="terms_url">https://yandex.ru/legal/practicum_offer/</string>
+
+    <string name="clear">Очистить</string>
+    <string name="search_nothing">Ничего не нашлось</string>
+
+    <string name="error_text">
+    Проблемы со связью\n\nЗагрузка не удалась. Проверьте подключение к интернету
+    </string>
+    <string name="refresh_button">Обновить</string>
+
+    <string name="history_title">Вы искали</string>
+    <string name="clear_history">Очистить историю</string>
+    <string name="back">Back</string>
+    <string name="play_pause">Play/Pause</string>
+    <string name="add_to_playlist">Добавить в плейлист</string>
+    <string name="add_to_favorites">Add to favorites</string>
+    <string name="unknown_album">Unknown album</string>
+    <string name="unknown_year">Unknown year</string>
+    <string name="unknown_genre">Unknown genre</string>
+    <string name="unknown_country">Неизвестная страна</string>
+    <string name="unknown_track">unknown_track</string>
+    <string name="no_genre_info">no_genre_info</string>
+    <string name="unknown_artist">unknown_artist</string>
+    <string name="duration_label">Длительность</string>
+    <string name="album_label">Альбом</string>
+    <string name="year_label">Год</string>
+    <string name="genre_label">Жанр</string>
+    <string name="country_label">Страна</string>
+
+    <string name="no_album_info">Нет информации об альбоме</string>
+    <string name="album_art">album_art</string>
+
+    <!-- Создание / редактирование плейлиста -->
+    <string name="cover">Обложка</string>
+    <string name="playlist_cover">Обложка плейлиста</string>
+    <string name="add_cover">Добавить обложку</string>
+    <string name="playlist_name">Название*</string>
+    <string name="enter_playlist_name">Введите название плейлиста</string>
+    <string name="description">Описание</string>
+    <string name="enter_description">Введите описание плейлиста</string>
+    <string name="create">Создать</string>
+
+    <string name="cancel">Отмена</string>
+    <string name="finish">Завершить</string>
+    <string name="finish_playlist_creation">Завершить создание плейлиста?</string>
+    <string name="unsaved_data_warning">Все несохраненные данные будут потеряны</string>
+    <string name="playlist_created">Плейлист %s создан</string>
+    <string name="select_image">Выбрать изображение</string>
+    <string name="added_to_playlist">Добавлено в плейлист %s</string>
+    <string name="track_already_in_playlist">Трек уже добавлен в плейлист %s</string>
+
+    <string name="no_tracks">Нет треков</string>
+    <string name="one_track">1 трек</string>
+    <string name="few_tracks">%d трека</string>
+    <string name="many_tracks">%d треков</string>
+
+    <string name="creating">Создание…</string>
+    <string name="no_playlists_yet">У вас пока нет плейлистов</string>
+
+    <string name="playlist_name_required">Название*</string>
+
+
+    <string name="share">Поделиться</string>
+    <string name="save">Сохранить</string>
+    <string name="edit_playlist_title">Редактировать</string>
+    <string name="sharing_playlist">Поделиться</string>
+    <string name="edit_info_playlist">Редактировать информацию</string>
+    <string name="delete_playlist">Удалить плейлист</string>
+    <string name="no_tracks_in_playlist">В этом плейлисте нет треков</string>
+
+    <string name="empty_playlist_share_message">В этом плейлисте нет списка треков, которым можно поделиться</string>
+    <string name="delete_track_message">Хотите удалить трек?</string>
+    <string name="delete_playlist_message">Хотите удалить плейлист \"%1$s\"?</string>
+    <string name="playlist_default_name">плейлист</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+
+
+    <plurals name="tracks_count">
+        <item quantity="zero">0 треков</item>
+        <item quantity="one">%d трек</item>
+        <item quantity="few">%d трека</item>
+        <item quantity="many">%d треков</item>
+        <item quantity="other">%d треков</item>
+    </plurals>
+
+    <plurals name="minutes_count">
+        <item quantity="one">%d минута</item>
+        <item quantity="few">%d минуты</item>
+        <item quantity="many">%d минут</item>
+        <item quantity="other">%d минут</item>
+    </plurals>
 </resources>

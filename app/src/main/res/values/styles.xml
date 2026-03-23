@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="ButtonMain" parent="Widget.MaterialComponents.Button.UnelevatedButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">@dimen/text_size</item>
+        <item name="android:letterSpacing">@dimen/letter_spacing</item>
+        <item name="android:backgroundTint">@color/white</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:fontFamily">@font/ys_display_medium</item>
+        <item name="android:textFontWeight">500</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="iconTint">@color/black</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconSize">@dimen/icon_size</item>
+    </style>
+
+    <style name="TextViewSettings" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="ImageViewSettings" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="tint">@color/icon_tint</item>
+    </style>
+
+    <style name="SearchView" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="tint">@color/icon_tint</item>
+    </style>
+
+
+    <style name="BottomNavigation" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="itemIconTint">@drawable/nav_icon_color_selector</item>
+        <item name="itemTextColor">@drawable/nav_icon_color_selector</item>
+    </style>
+
+    <style name="ButtonNewPlaylist" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="backgroundTint">?attr/colorOnBackground</item>
+        <item name="strokeColor">?attr/colorOnBackground</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">?attr/colorSurface</item>
+        <item name="textAllCaps">false</item>
+        <item name="cornerRadius">54dp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+
+    <style name="NoConnect" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="backgroundTint">?attr/colorOnBackground</item>
+        <item name="strokeColor">?attr/colorOnBackground</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">?attr/colorSurface</item>
+        <item name="textAllCaps">false</item>
+        <item name="cornerRadius">54dp</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="update" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="backgroundTint">?attr/colorOnBackground</item>
+        <item name="strokeColor">?attr/colorOnBackground</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">?attr/colorSurface</item>
+        <item name="textAllCaps">false</item>
+        <item name="cornerRadius">54dp</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+
+    <style name="MyTabLayout" parent="Widget.MaterialComponents.TabLayout">
+        <item name="android:layout_height">56dp</item>
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="tabTextAppearance">@style/MyTabTextAppearance</item>
+        <item name="tabTextColor">?attr/colorOnSurface</item>
+        <item name="tabSelectedTextColor">?attr/colorOnSurface</item>
+        <item name="tabIndicatorColor">?attr/colorOnSurface</item>
+        <item name="tabRippleColor">@null</item>
+    </style>
+
+    <style name="MyTabTextAppearance" parent="android:TextAppearance">
+        <item name="android:textAllCaps">false</item>
+        <item name="textAllCaps">false</item>
+        <item name="android:textSize">@dimen/text_tabLayout</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="fontFamily">@font/ys_display_medium</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="ImageViewSmile" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:src">@drawable/smile</item>
+    </style>
+
+    <style name="ImageViewErrorsInternen" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:src">@drawable/errorsinternet</item>
+    </style>
+
+    <style name="EditTextCursorTheme" parent="ThemeOverlay.AppCompat.Light">
+        <item name="colorControlActivated">@color/cursor_color</item>
+
+    </style>
+
+    <style name="BottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/BottomSheetStyle</item>
+    </style>
+
+    <style name="BottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlayCorner2">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">2dp</item>
+    </style>
+    <style name="ShapeAppearanceOverlayCorner3">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+
+    <style name="TextAppearance.PlaylistMaker.Body2" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineHeight">20sp</item>
+        <item name="android:letterSpacing">0.018</item>
+        <item name="android:textColor">@color/yp_black</item>
+    </style>
+
+
+
+</resources>
+
+
+

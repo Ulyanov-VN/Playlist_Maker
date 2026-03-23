@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="iconBackgroundColor" format="color|reference" />
+    <attr name="iconForegroundColor" format="color|reference" />
+    <attr name="PlaylistButtonTextColor" format="color|reference" />
+    <attr name="BgToastColor" format="color|reference" />
+    <attr name="TextToastColor" format="color|reference" />
+    <attr name="TextNewPlaylistColor" format="color|reference" />
+    <attr name="hintNewPlaylistColor" format="color|reference" />
+</resources>

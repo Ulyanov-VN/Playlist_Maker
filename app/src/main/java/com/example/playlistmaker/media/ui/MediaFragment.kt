@@ -1,45 +1,59 @@
 package com.example.playlistmaker.media.ui
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.TextView
+import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.viewpager2.widget.ViewPager2
+import androidx.navigation.fragment.findNavController
 import com.example.playlistmaker.R
-import com.example.playlistmaker.media.ui.adapters.MediaPagerAdapter
+import com.example.playlistmaker.media.ui.compose.MediaScreen
 import com.example.playlistmaker.media.ui.viewmodels.FavoriteTracksViewModel
 import com.example.playlistmaker.media.ui.viewmodels.PlaylistsViewModel
-import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
+import com.example.playlistmaker.search.domain.entity.Track
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class MediaFragment : Fragment(R.layout.activity_media) {
-
-    private lateinit var viewPager: ViewPager2
-    private lateinit var tabLayout: TabLayout
-    private lateinit var title: TextView
+class MediaFragment : Fragment() {
 
     private val favoriteTracksViewModel: FavoriteTracksViewModel by viewModel()
     private val playlistsViewModel: PlaylistsViewModel by viewModel()
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun onResume() {
+        super.onResume()
+        playlistsViewModel.refreshPlaylists()
+    }
 
-        viewPager = view.findViewById(R.id.viewPager)
-        tabLayout = view.findViewById(R.id.tabLayout)
-        title = view.findViewById(R.id.title)
-
-        title.text = getString(R.string.media)
-
-        val pagerAdapter = MediaPagerAdapter(this)
-        viewPager.adapter = pagerAdapter
-
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = when (position) {
-                0 -> getString(R.string.favorite_tracks)
-                1 -> getString(R.string.Playlists)
-                else -> ""
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                MediaScreen(
+                    favoriteTracksViewModel = favoriteTracksViewModel,
+                    playlistsViewModel = playlistsViewModel,
+                    onTrackClick = ::openPlayer,
+                    onCreatePlaylistClick = {
+                        findNavController().navigate(R.id.action_media_to_create_playlist)
+                    },
+                    onPlaylistClick = { playlist ->
+                        val bundle = Bundle().apply {
+                            putLong("playlistId", playlist.playlistId)
+                        }
+                        findNavController().navigate(R.id.action_media_to_playlistDetails, bundle)
+                    }
+                )
             }
-        }.attach()
+        }
+    }
+
+    private fun openPlayer(track: Track) {
+        val bundle = bundleOf("track" to track)
+        findNavController().navigate(R.id.playerFragment, bundle)
     }
 }

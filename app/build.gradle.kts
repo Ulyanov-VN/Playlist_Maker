@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler)
     id("kotlin-parcelize")
     id("kotlin-kapt")
 }
@@ -31,6 +32,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
     }
 
     compileOptions {
@@ -44,11 +46,23 @@ android {
 }
 
 dependencies {
+    implementation(platform("androidx.compose:compose-bom:2024.12.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.12.01"))
+
     // Base AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+
+    // Compose
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.runtime:runtime-livedata")
+    implementation("androidx.activity:activity-compose:1.10.1")
+    debugImplementation("androidx.compose.ui:ui-tooling")
 
     // Material
     implementation(libs.material)

@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun playlistMakerScreenBackground(): Color {
     return if (isSystemInDarkTheme()) {
-        Color(0xFF000000)
+        Color(0xFF1A1B22)
     } else {
         Color(0xFFFFFFFF)
     }

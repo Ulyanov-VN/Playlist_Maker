@@ -168,7 +168,7 @@ fun SearchScreen(
                         if (query.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.search),
-                                color = Color(0xFFAEAFB4),
+                                color = if (isSystemInDarkTheme()) Color(0xFF1A1B22) else Color(0xFFAEAFB4),
                                 fontFamily = YsDisplayRegular,
                                 fontWeight = FontWeight.W400,
                                 fontSize = 16.sp

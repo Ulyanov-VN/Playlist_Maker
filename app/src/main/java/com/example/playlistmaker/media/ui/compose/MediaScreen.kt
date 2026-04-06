@@ -79,7 +79,7 @@ fun MediaScreen(
     val backgroundColor = playlistMakerScreenBackground()
     val titleColor = playlistMakerPrimaryText()
 
-    val tabsBackground = if (isSystemInDarkTheme()) Color.Black else Color.White
+    val tabsBackground = if (isSystemInDarkTheme()) Color(0xFF1A1B22) else Color.White
     val tabTextColor = if (isSystemInDarkTheme()) Color.White else Color(0xFF1A1B22)
 
     Column(
